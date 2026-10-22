@@ -2303,13 +2303,15 @@ end
 
 -- items: { { key, label, icon, tip }, ... } stacked from the content line
 -- down; bottom: the same, stacked up from the rail's foot (Options). The
--- active key is marked. -> the number of top items that fit.
+-- active key is marked. Top rows share the available height, up to 56 units;
+-- the foot keeps its size. -> the number of top items placed.
 function W.ShellRail(f, items, bottom, active, onSelect)
 	if not rawget(f, "Rail") then return 0 end
 	fitRail(f, items, bottom)
 	local n = 0
-	local function place(item, i, y, fromBottom)
+	local function place(item, i, y, fromBottom, height)
 		local b = railButton(f, i)
+		b:SetHeight(height or RAIL_ROW)
 		b.psKey, b.psOnClick = item.key, item.onClick or onSelect
 		b.psTip = item.tip or item.label
 		local on = item.key == active
@@ -2336,12 +2338,12 @@ function W.ShellRail(f, items, bottom, active, onSelect)
 	end
 	local limit = f:GetHeight() - 2 - y -- the top of the bottom group
 	y = f.psNavTop -- the first section level with the sidebar's first row
+	local row = min(RAIL_ROW, floor(max(0, limit - y) / max(1, #items)))
 	for k = 1, #items do
-		if y + RAIL_ROW > limit then break end
 		i = i + 1
 		n = n + 1
-		place(items[k], i, y)
-		y = y + RAIL_ROW
+		place(items[k], i, y, false, row)
+		y = y + row
 	end
 	for k = i + 1, #f.railButtons do f.railButtons[k]:Hide() end
 	f.psRailFloor = limit

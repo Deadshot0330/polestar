@@ -17,6 +17,10 @@
 --       entrance = { map, x, y, f } | nil, quests = { A = n, H = n }, bosses = n,
 --       attune = { A = n, H = n } } }   -- level order, no page decoded
 --       (name and zoneName in the client's language when it has them; map: the instance's Map id)
+--   Dungeons.ForPlayer(player) -> summaries, reason? -- journal level/faction filter, no pages decoded
+--   Dungeons.MatchesLevel(summary, level, faction) -> bool -- same filter for an existing list
+--   Dungeons.QuestCount(summary, faction) -> n -- known catalog quests, not availability
+--   Dungeons.QuestState(quest, level) -> "done"|"ready"|"log"|"low"|"open" -- observed state only
 --   Dungeons.Get(key) -> { key, name, kind, forever, minLevel, maxLevel, players, map, zone, zoneName, entrance } | nil
 --   Dungeons.Entrance(key) -> map, x, y, f | nil
 --   Dungeons.Quests(key, faction) -> { quest, ... }   -- faction "A" | "H" | nil (all); level order
@@ -238,6 +242,51 @@ function Dungeons.List()
 		return a.key < b.key
 	end)
 	return out
+end
+
+-- The journal's catalog filter, shared with Home. This is a level preview
+-- (including two levels below the catalog band), not entry advice or ranking.
+function Dungeons.MatchesLevel(d, level, faction)
+	if type(level) ~= "number" or d.kind == "raid" or type(d.minLevel) ~= "number" then return false end
+	if level < d.minLevel - 2 or level > (d.maxLevel or d.minLevel) then return false end
+	local side = faction == "Alliance" and "A" or faction == "Horde" and "H"
+	if not side then return true end
+	local q = d.quests or {}
+	return (q[side] or 0) > 0 or ((q.A or 0) == 0 and (q.H or 0) == 0)
+end
+
+-- Catalog counts, not counts of quests currently available to the character.
+function Dungeons.QuestCount(d, faction)
+	local q = d.quests or {}
+	if faction == "Alliance" then return q.A or 0 end
+	if faction == "Horde" then return q.H or 0 end
+	return math.max(q.A or 0, q.H or 0), q.A or 0, q.H or 0
+end
+
+function Dungeons.ForPlayer(player)
+	local out = {}
+	if not player or type(player.level) ~= "number" then return out, "player" end
+	local ok, reason = Dungeons.Load()
+	if not ok then return out, reason end
+	for _, d in ipairs(Dungeons.List()) do
+		if Dungeons.MatchesLevel(d, player.level, player.faction) then out[#out + 1] = d end
+	end
+	return out
+end
+
+-- The same observed quest state used by the journal. Class and chain
+-- requirements remain separate facts; "open" alone is not an eligibility check.
+function Dungeons.QuestState(q, level)
+	local C = ns.Compat
+	if C and q.id then
+		if C.IsQuestCompleted and C.IsQuestCompleted(q.id) then return "done" end
+		if C.IsOnQuest and C.IsOnQuest(q.id) then
+			if C.IsQuestReadyForTurnIn and C.IsQuestReadyForTurnIn(q.id) then return "ready" end
+			return "log"
+		end
+	end
+	if q.minLevel and level and level < q.minLevel then return "low" end
+	return "open"
 end
 
 function Dungeons.Get(key)

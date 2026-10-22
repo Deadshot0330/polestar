@@ -46,7 +46,7 @@ ${script}`,
 
 test('a leveling guide: the chip after its levels says what its turn-ins are worth; hovering it opens the panel', () => {
 	const [out] = run(`
-		Polestar.UI.ShowPicker()
+		Polestar.UI.ShowPicker({ section = "Guides", view = "browse" })
 		P.Select("${ELWYNN}")
 		local d = P.details
 		local chip = { d.XP:IsShown(), d.XP.Text:GetText() }
@@ -72,7 +72,7 @@ test('a leveling guide: the chip after its levels says what its turn-ins are wor
 test('below the guide\'s level: the chip says the recommended level, the panel says so first and sums from there', () => {
 	const [out] = run(`
 		uistub.guides["${ELWYNN}"].minLevel = 6
-		Polestar.UI.ShowPicker()
+		Polestar.UI.ShowPicker({ section = "Guides", view = "browse" })
 		P.Select("${ELWYNN}")
 		local d = P.details
 		hover(d.XP)
@@ -89,12 +89,12 @@ test('below the guide\'s level: the chip says the recommended level, the panel s
 
 test('no chip without the Codex, for a guide that is not leveling, or with nothing selected', () => {
 	const [none] = run(`
-		Polestar.UI.ShowPicker()
+		Polestar.UI.ShowPicker({ section = "Guides", view = "browse" })
 		P.Select("${ELWYNN}")
 		emit(P.details.XP:IsShown())`, { withPack: false });
 	assert.equal(none, false, 'no Codex: nothing to count');
 	const [other] = run(`
-		Polestar.UI.ShowPicker()
+		Polestar.UI.ShowPicker({ section = "Guides", view = "browse" })
 		P.Select("forever/professions/tailoring")
 		emit(P.details.XP:IsShown())`);
 	assert.equal(other, false, 'a profession guide has no levels chip');
@@ -102,7 +102,7 @@ test('no chip without the Codex, for a guide that is not leveling, or with nothi
 		Polestar.Set("lookup.enabled", false)
 		local loads, load = 0, Polestar.Codex.Load
 		Polestar.Codex.Load = function(...) loads = loads + 1; return load(...) end
-		Polestar.UI.ShowPicker()
+		Polestar.UI.ShowPicker({ section = "Guides", view = "browse" })
 		P.Select("${ELWYNN}")
 		emit({ shown = P.details.XP:IsShown(), loads = loads })`);
 	assert.deepEqual(off, { shown: false, loads: 0 }, 'Lookup turned off: the Codex is Lookup\'s, nothing loads it');
@@ -110,7 +110,7 @@ test('no chip without the Codex, for a guide that is not leveling, or with nothi
 
 test('the theme is followed: a new accent, font and skin repaint the chip and lay the open panel out again', () => {
 	const [before, after] = run(`
-		Polestar.UI.ShowPicker()
+		Polestar.UI.ShowPicker({ section = "Guides", view = "browse" })
 		P.Select("${ELWYNN}")
 		local d = P.details
 		hover(d.XP)

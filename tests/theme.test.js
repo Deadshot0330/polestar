@@ -446,7 +446,14 @@ test('every texture the UI shows, and every goal verb icon, exists as a valid TG
 		emit(out)`);
 	const prefix = 'Interface\\AddOns\\Polestar\\Media\\UI\\';
 	const ours = paths.filter((p) => p.startsWith(prefix)).map((p) => p.slice(prefix.length));
-	assert.deepEqual(paths.filter((p) => !p.startsWith(prefix)), [], 'the UI only uses its own textures');
+	// Home uses the client's faction identity and the existing Theme skull.
+	// Keep this list explicit so a misspelled addon path still fails the audit.
+	const clientArt = new Set([
+		'Interface\\TargetingFrame\\UI-PVP-Alliance',
+		'Interface\\TargetingFrame\\UI-PVP-Horde',
+		'Interface\\TargetingFrame\\UI-RaidTargetingIcon_8',
+	]);
+	assert.deepEqual(paths.filter((p) => !p.startsWith(prefix) && !clientArt.has(p)), [], 'textures are addon assets or known client artwork');
 	for (const v of verbs) assert.ok(ours.includes(`icon-${v}`));
 	for (const n of ['emblem', 'wordmark', 'band', 'watermark']) assert.ok(ours.includes(n), `${n} is used`);
 	const missing = [];

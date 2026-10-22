@@ -101,6 +101,7 @@ local STAT_LABEL = {
 }
 
 local function nameOf(key) return STAT_LABEL[key] or gear().Pawn.NameOf(key) end
+UI.GearStatName = nameOf
 
 -- The weights of a scale as { { key, name, value }, ... } in the order of
 -- Gear.STAT_KEYS (the main stats first, weapon DPS last).

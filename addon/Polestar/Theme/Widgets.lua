@@ -2081,12 +2081,24 @@ function W.Shell(name, opts)
 	side:SetPoint("TOPLEFT", f, "TOPLEFT", 1 + RAIL, -1)
 	side:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 1 + RAIL, 1)
 	side:SetWidth(SB)
-	Theme.Skin(side, "sidebar")
 	draggable(side)
 	f.Sidebar = side
+	-- Keep decoration separate from the brand and status controls: a page
+	-- can reclaim the index column without hiding or reparenting its chrome.
+	local ground = CreateFrame("Frame", nil, side)
+	ground:SetAllPoints(side)
+	-- Game skins add an inset border one level above their paint frame.
+	-- Leave both paint levels above the window and below the sidebar text.
+	local groundLevel = side:GetFrameLevel()
+	side:SetFrameLevel(groundLevel + 2)
+	ground:SetFrameLevel(groundLevel)
+	ground:EnableMouse(false)
+	Theme.Skin(ground, "sidebar")
+	f.SidebarBackground = ground
 	local rule = W.Divider(side, true)
 	rule:SetPoint("TOPRIGHT", side, "TOPRIGHT", 0, 0)
 	rule:SetPoint("BOTTOMRIGHT", side, "BOTTOMRIGHT", 0, 0)
+	f.SidebarDivider = rule
 
 	-- The sidebar's own rhythm, one compact block from the top: the lockup
 	-- (emblem, wordmark, and "A community project" under the wordmark)

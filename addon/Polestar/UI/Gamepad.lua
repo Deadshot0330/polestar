@@ -345,7 +345,7 @@ G.ACTIONS = {
 	{ action = "POLESTAR_PREV", section = "guide", label = L["Previous step"], run = "Prev" },
 	{ action = "POLESTAR_FOCUS", section = "guide", label = L["Browse the guide with the gamepad"], run = "Focus" },
 	{ action = "POLESTAR_TOGGLE", section = "guide", label = L["Toggle guide window"], run = "Toggle" },
-	{ action = "POLESTAR_MENU", section = "windows", label = L["Open the guide menu"], run = "Menu" },
+	{ action = "POLESTAR_MENU", section = "windows", label = L["Open Home"], run = "Menu" },
 	{ action = "POLESTAR_OPTIONS", section = "windows", label = L["Open Polestar options"], run = "Options" },
 	{ action = "POLESTAR_REPORT", section = "windows", label = L["Report a problem"], run = "Report" },
 	{ action = "CLICK PolestarQuestItemButton:LeftButton", section = "buttons", label = L["Use quest item"] },

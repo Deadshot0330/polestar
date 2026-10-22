@@ -240,7 +240,7 @@ test('turning "Navigate Polestar\'s windows" off with the gamepad gives every bu
 test('the guide menu: the focus starts on the selected guide, LB / RB step the rail\'s sections, X loads the focused guide', () => {
 	const [start, sections, loaded] = run(`
 		local P = UI.Picker
-		UI.ShowPicker()
+		UI.ShowPicker({ section = "Guides", view = "browse" })
 		stub.advance(0.3)
 		local w = G.Focused(PolestarPicker)
 		emit({ guide = w and w.psGuide and w.psGuide.id, selected = P.Selected() })

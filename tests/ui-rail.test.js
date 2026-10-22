@@ -99,9 +99,9 @@ for (const skin of SKINS) {
 				picked = picked, last = last, back = back, import = P.Section() })`);
 		assert.equal(out.seven.height, skin === 'polestar' ? 680 : 640);
 		assert.equal(out.options.height, skin === 'polestar' ? 680 : 690);
-		assertFit(out.five, 5, 'Guides');
+		assertFit(out.five, 5, 'Home');
 		assertFit(out.fiveOptions, 5, 'Options');
-		assertFit(out.seven, 7, 'Guides');
+		assertFit(out.seven, 7, 'Home');
 		assertFit(out.options, 7, 'Options');
 		assert.ok(out.five.top.every((b) => b.h === 56));
 		assert.ok(out.seven.top.every((b) => b.h === (skin === 'polestar' ? 56 : 55)));
@@ -128,7 +128,7 @@ for (const initial of ['polestar', 'halo']) {
 			end`);
 		for (const { hub, options } of samples) {
 			assert.equal(hub.height, initial === 'polestar' ? 680 : 640);
-			assertFit(hub, 7, 'Guides');
+			assertFit(hub, 7, 'Home');
 			assertFit(options, 7, 'Options');
 		}
 	});
@@ -153,12 +153,12 @@ test('short-hub rail fits long translated labels at supported menu scales and re
 		before: fakeLocale('itIT', { Guides: 'Ausführliche Anleitungen', Lookup: 'Nachschlagen', Dungeons: 'Verliesübersicht', Import: 'Anleitungen importieren', Options: 'Einstellungen' }),
 	});
 	for (const [i, scale] of [0.7, 1, 1.4].entries()) {
-		assertFit(samples[i], 7, 'Guides');
+		assertFit(samples[i], 7, 'Home');
 		assert.equal(samples[i].scale, scale);
 	}
 	assertFit(samples[3], 5, 'Guides');
 	assert.ok(samples[3].top.every((b) => b.h === 56), 'pooled top buttons grow back');
-	assertFit(samples[4], 7, 'Guides');
+	assertFit(samples[4], 7, 'Home');
 });
 
 test('gamepad shoulders reach all seven sections and the final rail button remains actionable', () => {
@@ -186,8 +186,8 @@ test('gamepad shoulders reach all seven sections and the final rail button remai
 			stub.advance(0.1)
 		end
 		emit({ rail = measure(PolestarPicker), visited = visited, focused = focused, selected = selected, back = P.Section() })`, { gamepad: true });
-	assert.equal(out.back, 'Guides');
-	assertFit(out.rail, 7, 'Guides');
+	assert.equal(out.back, 'Home');
+	assertFit(out.rail, 7, 'Home');
 	assert.deepEqual(out.visited.filter((key) => key !== 'Import'), out.rail.keys);
 	assert.equal(out.focused, true);
 	assert.equal(out.selected, out.rail.keys[6]);

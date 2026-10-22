@@ -9,12 +9,10 @@
 -- Legacy, Collectibles, Miscellaneous, Favorites). A category with no guide for any faction
 -- is left out; one empty only for this faction fades and says how to reach
 -- its guides. Dungeons have their own hub section, not a category.
--- Middle: tabs (Home: Continue cards for the open tabs and the suggested
--- guides; Browse: the last category or the search; Current: the open tabs;
+-- Middle: tabs (Browse: the last category or the search; Current: the open tabs;
 -- Recent: the last guides loaded), one always active, over one line per
 -- guide, "Title (min-max)", a "Group" chip on a guide with group content
--- (elites, dungeons, raids: the compiled `group`; on the Continue cards
--- too), a check on finished guides and a muted "Tab N"
+-- (elites, dungeons, raids: the compiled `group`), a check on finished guides and a muted "Tab N"
 -- on open ones, under small folder headers (leveling by faction and band:
 -- "Horde 30-40"; the rest by category). The faction filter sits at the
 -- right of the tab row. The header says what the list holds ("Horde · 65
@@ -62,12 +60,11 @@ local function readSizes()
 end
 local ROW_X = 12 -- where list rows' grounds start in the middle pane
 local TEXT_X = SH.pad - ROW_X -- text inside a row, on the column's x=32 edge
-local ROW_H, FOLDER_H, CARD_H, CARD_GAP = 28, 32, 78, 10
+local ROW_H, FOLDER_H = 28, 32
 local ART_H = SH.top -- the art ends on the tab row's hairline
 local DPAD = SH.side -- details pane inset, the sidebar's
 local FACT_W, FACT_GAP = 84, 10 -- the facts' label column and row gap
 local RECENT_MAX = 10
-local SUGGEST_MAX = 5
 local DOT = "  \194\183  "
 -- "›", not "→": many fonts the window may follow (EllesmereUI's Expressway
 -- included) have no arrow glyph and draw a box.
@@ -79,17 +76,17 @@ P.RECENT_MAX = RECENT_MAX
 
 local win, details
 local factCache = {} -- guide id -> { quests, zones } (guideFacts)
-local folderPool, rowPool, cardPool, segButtons = {}, {}, {}, {}
+local folderPool, rowPool, segButtons = {}, {}, {}
 local query = ""
 local questContext -- { id, query, steps = { [guideId] = matching steps } }
 local category = "All"
-local view = "home" -- "home" | "current" | "recent" | "browse"
+local view = "browse" -- "current" | "recent" | "browse"
 local newTabMode = false
 local visibleIds = {} -- guide ids in the middle pane, top to bottom (arrow keys)
 
 local FACTIONS = { "Alliance", "Horde", "All" }
-local VIEWS = { "home", "browse", "current", "recent" }
-local VIEW_LABEL = { home = L["Home"], browse = L["Browse"], current = L["Current"], recent = L["Recent"] }
+local VIEWS = { "browse", "current", "recent" }
+local VIEW_LABEL = { browse = L["Browse"], current = L["Current"], recent = L["Recent"] }
 
 -- The guide format's categories, in the order players look for them.
 local CATEGORIES = { "Leveling", "Class", "Professions", "Reputation", "Exploration", "Legacy", "Collectibles", "Miscellaneous" }
@@ -492,43 +489,8 @@ function P.LoadSelected()
 	load(id, newTabMode and not open)
 end
 
--- "Suggested for you": every leveling guide for the player's level, best
--- first (Guides.Suggestions), open ones included (their row says "Tab N"),
--- so the list always answers "what fits me now"; then where the open tabs
--- lead (`next` and route choices) once the player is within two levels of
--- them (a level 2 player in a 1-12 guide is not sent on to a 12-19 one).
--- Finished guides are left out.
-local FOLLOW_REACH = 2 -- levels below a follow-up's minimum at which it shows
-
-local function suggestions(byId, tabs, openIndex)
-	local G, C = ns.Guides, ns.Compat
-	local level
-	if C and C.GetPlayerInfo then
-		local ok, info = pcall(C.GetPlayerInfo)
-		if ok and type(info) == "table" then level = info.level end
-	end
-	local out, seen = {}, {}
-	local function add(id, followUp)
-		if #out >= SUGGEST_MAX or not id or seen[id] or not byId[id] then return end
-		if followUp and (openIndex[id] or (level and level + FOLLOW_REACH < (byId[id].minLevel or 1))) then return end
-		seen[id] = true
-		if guideState(id) == "done" then return end
-		out[#out + 1] = byId[id]
-	end
-	for _, id in ipairs(G and G.Suggestions and G.Suggestions() or {}) do add(id) end
-	for _, t in ipairs(tabs or {}) do
-		local h = byId[t.guideId]
-		if h then
-			for _, c in ipairs(type(h.nextChoices) == "table" and h.nextChoices or { h.next }) do
-				if offered(h.id, c) then add(c, true) end
-			end
-		end
-	end
-	return out
-end
-
 ---------------------------------------------------------------------------
--- Middle pane: folders, guide lines, Continue cards
+-- Middle pane: folders and guide lines
 ---------------------------------------------------------------------------
 
 local function folderRow(i)
@@ -636,86 +598,6 @@ local function paintRow(r, g, note, width)
 	local room = width - TEXT_X * 2 - (note and (noteW + 12) or 0) - (lv and (r.Range:GetStringWidth() + 5) or 0) - groupW
 	r.Title:SetWidth(max(40, min(room, floor(r.Title:GetStringWidth() + 1))))
 	r:SetWidth(width)
-end
-
-local function card(i)
-	local c = cardPool[i]
-	if c then return c end
-	c = CreateFrame("Button", nil, win.Body)
-	c:SetHeight(CARD_H)
-	Theme.Skin(c, "button")
-	c.Ring = W.Tex(c, "OVERLAY", "white", "accent")
-	c.Ring:SetHeight(1)
-	c.Ring:SetPoint("TOPLEFT", c, "TOPLEFT", 0, 0)
-	c.Ring:SetPoint("TOPRIGHT", c, "TOPRIGHT", 0, 0)
-	c.Icon = c:CreateTexture(nil, "ARTWORK")
-	c.Icon:SetSize(14, 14)
-	c.Icon:SetPoint("TOPLEFT", c, "TOPLEFT", TEXT_X, -13)
-	c.Title = W.Text(c, "body", "text")
-	c.Title:SetPoint("LEFT", c.Icon, "RIGHT", 8, 0)
-	-- The tab it is open in, level with the title.
-	c.Note = W.Text(c, "small", "textMuted")
-	c.Note:SetJustifyH("RIGHT")
-	c.Note:SetPoint("RIGHT", c, "TOPRIGHT", -TEXT_X, -20)
-	-- A guide with group content: "Group" left of the tab.
-	c.Group = W.Chip(c)
-	c.Group:SetPoint("RIGHT", c.Note, "LEFT", -8, 0)
-	c.Group:Hide()
-	c.Step = W.Text(c, "small", "textDim")
-	c.Step:SetPoint("TOPLEFT", c, "TOPLEFT", TEXT_X, -38)
-	c.Pct = W.Text(c, "number", "textDim")
-	c.Pct:SetJustifyH("RIGHT")
-	c.Pct:SetPoint("TOPRIGHT", c, "TOPRIGHT", -TEXT_X, -38)
-	c.Line = W.ProgressLine(c, 2)
-	c.Line:SetPoint("BOTTOMLEFT", c, "BOTTOMLEFT", TEXT_X, 14)
-	c.Line:SetPoint("BOTTOMRIGHT", c, "BOTTOMRIGHT", -TEXT_X, 14)
-	c:SetScript("OnClick", rowClick)
-	c:SetScript("OnDoubleClick", rowDoubleClick)
-	c:SetScript("OnEnter", W.SimpleTip)
-	c:SetScript("OnLeave", W.HideTip)
-	cardPool[i] = c
-	return c
-end
-
-local function layoutCards(tabs, active, byId, y)
-	local per = 2
-	local x0 = ROW_X
-	local cw = floor((MID_W - x0 * 2 - CARD_GAP * (per - 1)) / per)
-	for i, t in ipairs(tabs) do
-		local c = card(i)
-		c.psIndex = i
-		c.psGuide = byId[t.guideId] or { id = t.guideId, title = t.title }
-		c.psTip = loadHint()
-		local sel = P.Selected() == t.guideId
-		c.Ring:SetShown(sel)
-		c.Icon:SetTexture(Theme.Media(CATEGORY_ICON[t.category] or "icon-level"))
-		W.Color(c.Icon, i == active and "accent" or "textDim")
-		c.Title:SetText(t.title or t.guideId)
-		local total = t.total or t.stepCount or 0
-		if t.complete then
-			c.Step:SetText(ns.LC("guide status", "Completed"))
-		elseif t.stepIndex then
-			c.Step:SetText(string.format(L["Step %d of %d"], t.stepIndex, t.stepCount or 0))
-		else
-			c.Step:SetText("")
-		end
-		local frac = total > 0 and (t.done or 0) / total or 0
-		c.Pct:SetText(floor(frac * 100 + 0.5) .. "%")
-		c:SetWidth(cw)
-		W.SetProgress(c.Line, frac, cw - TEXT_X * 2)
-		c.Note:SetText(string.format(L["Tab %d"], i))
-		local groupW = c.psGuide.group == true and (W.SetChip(c.Group, L["Group"], "dungeon") + 8) or 0
-		c.Group:SetShown(groupW > 0)
-		local room = cw - TEXT_X * 2 - 14 - 8 - c.Note:GetStringWidth() - 8 - groupW
-		c.Title:SetWidth(max(40, floor(room)))
-		local col, line = (i - 1) % per, floor((i - 1) / per)
-		c:ClearAllPoints()
-		c:SetPoint("TOPLEFT", win.Body, "TOPLEFT", x0 + col * (cw + CARD_GAP), -(y + line * (CARD_H + CARD_GAP)))
-		c:Show()
-	end
-	for i = #tabs + 1, #cardPool do cardPool[i]:Hide() end
-	local lines = floor((#tabs + per - 1) / per)
-	return y + lines * (CARD_H + CARD_GAP)
 end
 
 ---------------------------------------------------------------------------
@@ -1380,7 +1262,8 @@ end
 ---------------------------------------------------------------------------
 
 local GUIDES = { key = "Guides", label = L["Guides"], icon = "guides", order = 10, builtin = true }
-local sections, section = { GUIDES }, nil
+local sections, section = { GUIDES }, "Home"
+local homeSearch -- Guides search/quest context retained across a visit to Home.
 P.GUIDES = GUIDES.key
 
 function UI.RegisterSection(spec)
@@ -1410,15 +1293,21 @@ function P.Query() return query end
 local function setSection(key)
 	if key == GUIDES.key then key = nil end
 	if key ~= section then
-		questContext = nil
-		query = ""
-		if win then win.Search:SetText("") end
+		if key == "Home" then
+			homeSearch = section == nil and { query = query, quest = questContext } or nil
+		elseif section == "Home" and key == nil and homeSearch then
+			query, questContext = homeSearch.query, homeSearch.quest
+			homeSearch = nil
+		else
+			questContext, query, homeSearch = nil, "", nil
+		end
+		if win then win.Search:SetText(query) end
 	end
 	section = key
 end
 
 -- Show a section ("Guides" or nil: the guide list). The hub search starts
--- empty when changing sections.
+-- empty when changing sections, except a visit to Home retains Guides search.
 function P.ShowSection(key)
 	setSection(key)
 	if win and win:IsShown() then P.Render() end
@@ -1441,6 +1330,20 @@ local HUB_SEARCH = { L["Search guides, items, NPCs"], L["Search guides, items"],
 
 local function sectionLayout(s)
 	local on = s ~= nil
+	local home = s and s.key == "Home"
+	win.SidebarBackground:SetShown(not home)
+	win.SidebarDivider:SetShown(not home)
+	win.NavScroll:SetShown(not home)
+	win.Sidebar:EnableMouse(not home)
+	win.Band:SetShown(not home)
+	-- Every section uses the shared shell branding, including Home.
+	win.Wordmark:Show()
+	win.Tagline:Show()
+	win.Title:SetShown(not home)
+	win.Subtitle:SetShown(not home and win.psSubtitle ~= "")
+	win.Title:ClearAllPoints()
+	win.Title:SetPoint("TOPLEFT", win.Header, "TOPLEFT", SH.pad, -32)
+	win.Title:SetPoint("TOPRIGHT", win.Header, "TOPRIGHT", -(12 + 28 + 12), -32)
 	details:SetShown(not on)
 	win.Content:SetShown(not on)
 	for _, b in ipairs(segButtons) do b:SetShown(not on) end
@@ -1472,8 +1375,14 @@ local function renderSection(s)
 	-- Under the tab row when the section set one, else under the header.
 	local f = s.psFrame
 	f:ClearAllPoints()
-	f:SetPoint("TOPLEFT", win.TabRow:IsShown() and win.TabRow or win.Header, "BOTTOMLEFT", 0, 0)
-	f:SetPoint("BOTTOMRIGHT", win.Main, "BOTTOMRIGHT", 0, 0)
+	if s.key == "Home" then
+		-- Leave the close/support links on their existing top line.
+		f:SetPoint("TOPLEFT", win.Sidebar, "TOPLEFT", 0, -44)
+		f:SetPoint("BOTTOMRIGHT", win.Main, "BOTTOMRIGHT", 0, SH.footer)
+	else
+		f:SetPoint("TOPLEFT", win.TabRow:IsShown() and win.TabRow or win.Header, "BOTTOMLEFT", 0, 0)
+		f:SetPoint("BOTTOMRIGHT", win.Main, "BOTTOMRIGHT", 0, 0)
+	end
 end
 
 -- The hub's sections as rail items (the settings window shows the same rail);
@@ -1516,6 +1425,7 @@ end
 -- The sidebar index of a section: its own nav, or for a one-view section
 -- the section itself, marked (the sidebar never stands empty).
 local function sectionNav(s)
+	if s.key == "Home" then return end
 	if not s.nav then
 		W.ShellNav(win, { { key = s.key, label = s.label or s.key, icon = s.icon } }, s.key, nil)
 		return
@@ -1585,9 +1495,7 @@ function P.Render()
 		end
 	else
 		title = VIEW_LABEL[view]
-		if view == "home" then
-			subtitle = L["Pick up where you left off, or start something new."]
-		elseif view == "current" then
+		if view == "current" then
 			subtitle = L["The guides open in your tabs."]
 		else
 			subtitle = L["The last guides you loaded."]
@@ -1597,7 +1505,7 @@ function P.Render()
 	W.ShellTitle(win, title, subtitle)
 
 	local width = MID_W - ROW_X * 2
-	local y, nf, ng, nc = 8, 0, 0, 0
+	local y, nf, ng = 8, 0, 0
 	visibleIds = {}
 	local function folder(text, count)
 		nf = nf + 1
@@ -1670,19 +1578,6 @@ function P.Render()
 				empty = L["No guides for this faction."]
 			end
 		end
-	elseif view == "home" then
-		if tabs and #tabs > 0 then
-			folder(L["Continue"], #tabs)
-			y = y + 4
-			y = layoutCards(tabs, active, byId, y) + 6
-			nc = #tabs
-		end
-		local sugg = suggestions(byId, tabs, openIndex)
-		if #sugg > 0 then
-			folder(L["Suggested for you"], #sugg)
-			for _, g in ipairs(sugg) do row(g, tabNote(g.id)) end
-		end
-		if nc == 0 and #sugg == 0 then empty = L["Nothing open yet. Pick a category on the left to find a guide."] end
 	elseif view == "current" then
 		if tabs and #tabs > 0 then
 			folder(L["Open tabs"], #tabs)
@@ -1703,9 +1598,6 @@ function P.Render()
 			empty = L["Guides you load show up here."]
 		end
 	end
-	if view ~= "home" or nc == 0 then
-		for _, c in ipairs(cardPool) do c:Hide() end
-	end
 	for i = ng + 1, #rowPool do rowPool[i]:Hide() end
 	for i = nf + 1, #folderPool do folderPool[i]:Hide() end
 	if empty then
@@ -1722,7 +1614,7 @@ function P.Render()
 	W.ShellWatermark(win, empty ~= nil)
 	W.ShellBody(win, y + 16)
 	renderDetails(byId, tabs, active)
-	P.shown = { view = view, guides = ng, folders = nf, cards = nc }
+	P.shown = { view = view, guides = ng, folders = nf }
 end
 
 -- Searching: keep the selection among the results, so Enter loads what
@@ -1734,7 +1626,7 @@ local function selectFirstResult()
 end
 
 function P.SetView(v)
-	view = v or "home"
+	view = v or "browse"
 	section = nil
 	if view ~= "browse" and query ~= "" then
 		query = ""
@@ -1864,7 +1756,15 @@ local function build()
 	-- rail's sections, X loads the guide on a focused row.
 	if ns.Gamepad and ns.Gamepad.Register then
 		ns.Gamepad.Register(win, {
+			onFocus = function(w)
+				local H = UI.HomeSection
+				if section == "Home" and H and H.RevealControl then H.RevealControl(w) end
+			end,
 			initial = function(rows)
+				local H = UI.HomeSection
+				if section == "Home" and H and H.Hero then
+					for i, w in ipairs(rows) do if w == H.Hero.Action then return i end end
+				end
 				local first
 				for i, w in ipairs(rows) do
 					if ns.Gamepad.Within(w, win.Main) and w.psKey == nil and w ~= win.ThanksLink then
@@ -1879,6 +1779,11 @@ local function build()
 			tabsLabel = L["Sections"],
 			-- The close sits among the details' own buttons: B goes in the hint bar.
 			close = false,
+			back = function()
+				local H = UI.HomeSection
+				if section == "Home" and H and H.InspectorBack and H.InspectorBack() then return end
+				win:Hide()
+			end,
 			x = function(w)
 				if w and w.psGuide and w.psGuide.id then
 					P.Select(w.psGuide.id)
@@ -1913,7 +1818,7 @@ function UI.ShowPicker(opts)
 	-- the suggestion.
 	local byId = headersById()
 	local sel = P.Selected()
-	if not (sel and byId[sel]) then
+	if section ~= "Home" and not (sel and byId[sel]) then
 		sel = nil
 		local tabs, active = tabsInfo()
 		if tabs and active and tabs[active] then sel = tabs[active].guideId end
@@ -1965,7 +1870,7 @@ end
 
 ns.On("GUIDE_CHANGED", function(id)
 	remember(id)
-	P.Render()
+	if section ~= "Home" then P.Render() end
 end)
 ns.On("SETTING_CHANGED", function(path)
 	if path == "ui.pickerFaction" or path == "" or path == "ui" then P.Render() end
@@ -1973,8 +1878,8 @@ end)
 local function guidesChanged()
 	factCache = {}
 	if questContext then questContext.steps = {} end
-	P.Render()
+	if section ~= "Home" then P.Render() end
 end
 ns.On("GUIDES_REGISTERED", guidesChanged)
 ns.On("PACKS_CHANGED", guidesChanged)
-ns.On("TABS_CHANGED", function() P.Render() end)
+ns.On("TABS_CHANGED", function() if section ~= "Home" then P.Render() end end)

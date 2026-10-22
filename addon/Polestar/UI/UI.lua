@@ -568,7 +568,7 @@ ns.On("SHOW_OPTIONS", function(section) if UI.ShowOptions then UI.ShowOptions(se
 -- The guide menu and the options from a key binding or a gamepad chord: open, or close when open.
 ns.On("TOGGLE_PICKER", function()
 	local P = UI.Picker
-	if P and P.frame and P.frame:IsShown() then P.frame:Hide() elseif UI.ShowPicker then UI.ShowPicker() end
+	if P and P.frame and P.frame:IsShown() then P.frame:Hide() elseif UI.ShowPicker then UI.ShowPicker({ section = "Home" }) end
 end)
 ns.On("TOGGLE_OPTIONS", function()
 	local O = UI.Options

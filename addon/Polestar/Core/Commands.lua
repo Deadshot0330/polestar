@@ -13,7 +13,7 @@ BINDING_NAME_POLESTAR_TOGGLE = L["Toggle guide window"]
 BINDING_NAME_POLESTAR_NEXT = L["Next step"]
 BINDING_NAME_POLESTAR_PREV = L["Previous step"]
 BINDING_NAME_POLESTAR_FOCUS = L["Browse the guide with the gamepad"]
-BINDING_NAME_POLESTAR_MENU = L["Open the guide menu"]
+BINDING_NAME_POLESTAR_MENU = L["Open Home"]
 BINDING_NAME_POLESTAR_OPTIONS = L["Open Polestar options"]
 BINDING_NAME_POLESTAR_REPORT = L["Report a problem"]
 -- Labels for the QoL secure buttons' CLICK bindings (QoL/Buttons.lua). The

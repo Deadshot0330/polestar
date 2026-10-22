@@ -44,6 +44,17 @@ local function lines()
 	end
 	return out
 end
+local function homeLines()
+	local out = {}
+	for _, r in ipairs(UI.HomeSection.Rows) do
+		if r:IsShown() then
+			local g = r.psGuide
+			local tab = r.Note:GetText():match("Tab %d+")
+			out[#out + 1] = (g.title or g.id) .. " (" .. UI.LevelRange(g.minLevel, g.maxLevel) .. ")" .. (tab and (" | " .. tab) or "")
+		end
+	end
+	return out
+end
 local function folders()
 	local out = {}
 	for _, f in ipairs(stub.frames) do
@@ -98,7 +109,7 @@ test('explicit sections are selected before the first render, from a cold or alr
 for (const hidden of [false, true]) {
 	test(`explicit Guides Browse clears search but keeps the category and selection (${hidden ? 'hidden' : 'open'} hub)`, () => {
 		const [out] = run(`
-			UI.ShowPicker()
+			UI.ShowPicker({ section = "Guides", view = "browse" })
 			P.SetQuery("tailoring")
 			P.SetCategory("Professions")
 			P.Select(uistub.tailoring)
@@ -146,7 +157,7 @@ test('legacy openers preserve staged sections and views; the general menu still 
 		PolestarPicker:Hide()
 		UI.ShowPicker()
 		emit({ initial = initial, closed = closed, staged = staged, lookup = lookup, import = import, view = P.View() })`);
-	assert.deepEqual(out, { initial: ['Guides', 'home'], closed: true, staged: 'Dungeons', lookup: 'Lookup', import: 'Import', view: 'recent' });
+	assert.deepEqual(out, { initial: ['Home', 'browse'], closed: true, staged: 'Dungeons', lookup: 'Lookup', import: 'Import', view: 'recent' });
 });
 
 test('explicit browsing leaves guide tabs, live and browsed steps, progress and manual targets untouched', () => {
@@ -198,7 +209,7 @@ test('browse: folders by faction and band, then by category; faction filter and 
 
 test('search covers titles, zones, categories and player-facing race names; typing selects the first result', () => {
 	const [out] = run(`
-		UI.ShowPicker()
+		UI.ShowPicker({ section = "Guides", view = "browse" })
 		local function guides(q, cat)
 			local t = {}
 			for _, e in ipairs(P.Entries("All", q, cat)) do if e.kind == "guide" then t[#t + 1] = e.guide.title end end
@@ -224,7 +235,7 @@ test('search covers titles, zones, categories and player-facing race names; typi
 
 test('left pane: the rail holds the sections and Options; the sidebar holds the categories in order, Favourites last', () => {
 	const [out] = run(`
-		UI.ShowPicker()
+		UI.ShowPicker({ section = "Guides", view = "browse" })
 		local labels, rail = {}, {}
 		for _, b in ipairs(PolestarPicker.navButtons) do
 			if b:IsShown() then labels[#labels + 1] = b.Label:GetText() .. " " .. b.Count:GetText() end
@@ -235,11 +246,11 @@ test('left pane: the rail holds the sections and Options; the sidebar holds the 
 		local icon = nav("Favorites").Icon:GetTexture()
 		nav("Professions"):Click()
 		local r = { view = P.View(), category = P.Category(), title = PolestarPicker.Title:GetText(), folders = folders(), lines = lines(),
-			navOn = nav("Professions").Bar:IsShown(), tabOn = tab("home").psSelected or false, browseOn = tab("browse").psSelected,
+			navOn = nav("Professions").Bar:IsShown(), tabOn = tab("current").psSelected or false, browseOn = tab("browse").psSelected,
 			tabs = {}, footer = PolestarPicker.Footer:IsShown(), subtitle = PolestarPicker.Subtitle:GetText() }
 		for _, t in ipairs(PolestarPicker.tabButtons) do if t:IsShown() then r.tabs[#r.tabs + 1] = t.Label:GetText() end end
-		tab("home"):Click()
-		r.home = { view = P.View(), homeOn = tab("home").psSelected }
+		tab("current"):Click()
+		r.current = { view = P.View(), currentOn = tab("current").psSelected }
 		tab("browse"):Click()
 		r.back = { view = P.View(), category = P.Category(), browseOn = tab("browse").psSelected }
 		for _, b in ipairs(PolestarPicker.railButtons) do if b:IsShown() and b.psKey == "Options" then b:Click() end end
@@ -248,17 +259,18 @@ test('left pane: the rail holds the sections and Options; the sidebar holds the 
 		emit({ cats = P.categories, labels = labels, rail = rail, sections = sections, icon = icon, r = r, options = PolestarOptions:IsShown(), picker = PolestarPicker:IsShown() })`);
 	assert.deepEqual(out.cats, ['All', 'Leveling', 'Professions', 'Reputation', 'Exploration', 'Legacy', 'Collectibles', 'Favorites'], 'dungeons have their own section, not a category');
 	// Sections (Guides built in, then the registered ones by order) are on the rail, Options at its foot.
-	assert.equal(out.sections[0], 'Guides');
-	assert.equal(out.sections[1], 'Lookup');
+	assert.equal(out.sections[0], 'Home');
+	assert.equal(out.sections[1], 'Guides');
+	assert.equal(out.sections[2], 'Lookup');
 	// Import is a foot section: above Options, not among the sections at the top.
-	assert.deepEqual(out.rail, ['Options', 'Import', 'Guides*', ...out.sections.slice(1).filter((s) => s !== 'Import')]);
+	assert.deepEqual(out.rail, ['Options', 'Import', 'Home', 'Guides*', ...out.sections.slice(2).filter((s) => s !== 'Import')]);
 	assert.deepEqual(out.labels, ['All guides 13', 'Leveling 6', 'Professions 3', 'Reputation 1', 'Exploration 1', 'Legacy 1', 'Collectibles 1', 'Favourites 0']);
 	assert.match(out.icon, /\\star$/);
 	assert.deepEqual(out.r, {
 		view: 'browse', category: 'Professions', title: 'Professions', folders: ['Professions 3'],
 		lines: ['Cooking 1-300 (5\u201360)', 'First Aid 1-300 (5\u201360)', 'Tailoring 1-300 (5\u201360)'], navOn: true, tabOn: false, browseOn: true,
-		tabs: ['Home', 'Browse', 'Current', 'Recent'], footer: false, subtitle: 'Alliance  \u00b7  3 guides',
-		home: { view: 'home', homeOn: true }, back: { view: 'browse', category: 'Professions', browseOn: true },
+		tabs: ['Browse', 'Current', 'Recent'], footer: false, subtitle: 'Alliance  \u00b7  3 guides',
+		current: { view: 'current', currentOn: true }, back: { view: 'browse', category: 'Professions', browseOn: true },
 	});
 	assert.equal(out.options, true);
 	assert.equal(out.picker, false);
@@ -266,7 +278,7 @@ test('left pane: the rail holds the sections and Options; the sidebar holds the 
 
 test('the sidebar is one compact block on one edge: the lockup (wordmark, tagline under it), the search with its foot on the band line, navigation 12px under that; the version on the rail\'s foot line', () => {
 	const [out] = run(`
-		UI.ShowPicker()
+		UI.ShowPicker({ section = "Guides", view = "browse" })
 		local F = PolestarPicker
 		local function pt(r, i) local p, _, _, x, y = r:GetPoint(i or 1); return { p, x, y } end
 		local opt
@@ -277,7 +289,7 @@ test('the sidebar is one compact block on one edge: the lockup (wordmark, taglin
 		local navFirst = F.navButtons[1]
 		emit({ wordmark = pt(F.Wordmark), tagline = pt(F.Tagline), search = pt(F.Search), navTop = F.psNavTop, navX = select(4, navFirst.Icon:GetPoint(1)),
 			status = pt(F.Status), optLabelBottom = optY + opt:GetHeight() + iconY - opt.Icon:GetHeight() + labelY - opt.Label:GetStringHeight(),
-			emblem = pt(F.Emblem), firstRail = (function() for _, b in ipairs(F.railButtons) do if b:IsShown() and b.psKey == "Guides" then local _, _, _, _, y = b:GetPoint(1); return -y end end end)() })`);
+			emblem = pt(F.Emblem), firstRail = (function() for _, b in ipairs(F.railButtons) do if b:IsShown() and b.psKey == "Home" then local _, _, _, _, y = b:GetPoint(1); return -y end end end)() })`);
 	const edge = 24;
 	assert.deepEqual(out.wordmark, ['TOPLEFT', edge - 2, -22], 'the wordmark\'s ink (2px into its box) sits on the sidebar edge');
 	assert.deepEqual(out.tagline, ['TOPLEFT', edge, -52], 'the tagline under the wordmark, on the same edge');
@@ -292,7 +304,7 @@ test('the sidebar is one compact block on one edge: the lockup (wordmark, taglin
 
 test('the search placeholder is the first wording that fits the box, refitted on resize; the last is cut when none fits', () => {
 	const [out] = run(`
-		UI.ShowPicker()
+		UI.ShowPicker({ section = "Guides", view = "browse" })
 		local box = PolestarPicker.Search
 		local ph = box.Placeholder
 		local function at(w)
@@ -323,7 +335,7 @@ test('the hub fits: every section on the rail above the foot (Import, Options), 
 		end
 		local all = {}
 		for k, s in ipairs(P.RailItems()) do all[k] = s.key end
-		UI.ShowPicker()
+		UI.ShowPicker({ section = "Guides", view = "browse" })
 		P.SetCategory("All")
 		local H = PolestarPicker:GetHeight()
 		local function bottomOf(b) local _, _, _, _, y = b:GetPoint(1); return -y + b:GetHeight() end
@@ -369,7 +381,7 @@ test('categories: left out without a guide for any faction; faded with a tip whe
 		end
 		uistub.openTabs(TABS, 1)
 		Polestar.Set("ui.pickerFaction", "Horde")
-		UI.ShowPicker()
+		UI.ShowPicker({ section = "Guides", view = "browse" })
 		P.SetCategory("All")
 		local collectibles = nav("Collectibles")
 		emit({ cats = P.categories, legacy = nav("Legacy") ~= nil, collectibles = { collectibles.psTip, collectibles:GetAlpha(), collectibles.Count:IsShown() },
@@ -383,7 +395,7 @@ test('categories: left out without a guide for any faction; faded with a tip whe
 test('selecting a guide shows its details and loads nothing; the selection is remembered', () => {
 	const [out] = run(`
 		uistub.openTabs(TABS, 1)
-		UI.ShowPicker()
+		UI.ShowPicker({ section = "Guides", view = "browse" })
 		P.SetCategory("Leveling")
 		local before = #uistub.calls
 		rowFor("Westfall"):Click()
@@ -407,7 +419,7 @@ test('selecting a guide shows its details and loads nothing; the selection is re
 			loadWidth = d.Load.psFixedWidth, facts = P.detail.facts }
 		PolestarPicker:Hide()
 		r.saved = Polestar.CharState().ui.pickerSelected
-		UI.ShowPicker()
+		UI.ShowPicker({ section = "Guides", view = "browse" })
 		r.again = d.Title:GetText()
 		emit(r)`);
 	assert.deepEqual(out, {
@@ -440,7 +452,7 @@ test('a Class guide\'s details lead with its reward (item and spell icons, quali
 		GameTooltip.SetHyperlink = function(_, link) tips[#tips + 1] = link end
 		GameTooltip.SetSpellByID = function(_, spell) tips[#tips + 1] = "spell:" .. spell end
 		Polestar.Set("ui.pickerFaction", "All")
-		UI.ShowPicker()
+		UI.ShowPicker({ section = "Guides", view = "browse" })
 		P.Select(id)
 		local d = D()
 		local tiles = {}
@@ -514,7 +526,7 @@ test('reward tiles: an uncached item\'s tooltip fills in when the item arrives, 
 		end
 		Polestar.Hooks.ItemClick("test", function(_, item) if IsAltKeyDown() then calls[#calls + 1] = "guide " .. item end end)
 		Polestar.Set("ui.pickerFaction", "All")
-		UI.ShowPicker()
+		UI.ShowPicker({ section = "Guides", view = "browse" })
 		P.Select(id)
 		local d = D()
 		local r = { requested = requested, spellsRequested = spellsRequested }
@@ -562,16 +574,16 @@ test('Load guide replaces the current tab, Open in new tab adds one; double-clic
 		uistub.openTabs(TABS, 1)
 		Polestar.Set("ui.shown", false)
 		local r = {}
-		UI.ShowPicker(); P.SetCategory("Leveling"); P.Select("forever/alliance/02-westfall")
+		UI.ShowPicker({ section = "Guides", view = "browse" }); P.SetCategory("Leveling"); P.Select("forever/alliance/02-westfall")
 		D().Load:Click()
 		r.load = { lastCall("SetGuide"), Polestar.Get("ui.shown"), PolestarPicker:IsShown() }
-		UI.ShowPicker(); P.Select("forever/alliance/dwarf-gnome/01-dun-morogh")
+		UI.ShowPicker({ section = "Guides", view = "browse" }); P.Select("forever/alliance/dwarf-gnome/01-dun-morogh")
 		D().NewTab:Click()
 		r.newTab = { lastCall("OpenTab"), PolestarPicker:IsShown() }
-		UI.ShowPicker(); P.SetCategory("Professions")
+		UI.ShowPicker({ section = "Guides", view = "browse" }); P.SetCategory("Professions")
 		stub.RunScript(rowFor("Cooking 1-300"), "OnDoubleClick", "LeftButton")
 		r.double = { lastCall("SetGuide"), PolestarPicker:IsShown() }
-		UI.ShowPicker(); P.SetQuery("darkshore")
+		UI.ShowPicker({ section = "Guides", view = "browse" }); P.SetQuery("darkshore")
 		stub.RunScript(PolestarPicker.Search, "OnEnterPressed")
 		r.enter = { lastCall("SetGuide"), PolestarPicker:IsShown() }
 		emit(r)`);
@@ -602,7 +614,7 @@ test('from the guide window\'s +, loading opens a new tab; faction buttons write
 		tip: 'Double-click a guide or press Enter to open it in a new tab.',
 	});
 	const [plain] = run(`
-		UI.ShowPicker(); P.Select("forever/alliance/02-westfall")
+		UI.ShowPicker({ section = "Guides", view = "browse" }); P.Select("forever/alliance/02-westfall")
 		emit({ newTab = D().NewTab:IsShown(), load = D().Load.Label:GetText(), primary = D().Load.psPrimary or false })`, { install: '{ noTabs = true }' });
 	assert.deepEqual(plain, { newTab: false, load: 'Load guide', primary: true });
 });
@@ -611,54 +623,44 @@ test('Home: Continue cards for the open tabs and the suggested guides; a card se
 	const [out] = run(`
 		uistub.player.level = 10
 		uistub.openTabs(TABS, 1)
-		UI.ShowPicker()
-		local cards = {}
-		for _, f in ipairs(stub.frames) do
-			if f.psIndex and rawget(f, "Pct") and f:IsShown() and f:GetParent() == PolestarPicker.Scroll.Child then cards[#cards + 1] = f end
-		end
-		table.sort(cards, function(a, b) return a.psIndex < b.psIndex end)
+		UI.ShowPicker({ section = "Home" })
+		local cards = UI.HomeSection.Cards
 		local info = {}
-		for i, c in ipairs(cards) do info[i] = { c.Title:GetText(), c.Step:GetText(), c.Pct:GetText(), c.Note:GetText() } end
-		local r = { view = P.View(), homeOn = tab("home").psSelected, folders = folders(), suggested = lines(), info = info, shown = P.shown.cards }
-		cards[2]:Click()
-		r.selected = { P.Selected(), D().Title:GetText(), PolestarPicker:IsShown() }
-		stub.RunScript(cards[2], "OnDoubleClick", "LeftButton")
+		for i, c in ipairs(cards) do info[i] = { c.Title:GetText(), c.Note:GetText() } end
+		local r = { section = P.Section(), suggested = homeLines(), info = info, shown = #cards }
+		cards[1]:Click()
+		r.selected = { P.Selected(), P.Section(), PolestarPicker:IsShown() }
+		stub.RunScript(cards[1], "OnDoubleClick", "LeftButton")
 		r.continued = { lastCall("SetGuide"), select(2, Polestar.Engine.GetTabs()), PolestarPicker:IsShown() }
 		emit(r)`);
-	assert.equal(out.view, 'home');
-	assert.equal(out.homeOn, true);
-	assert.deepEqual(out.folders, ['Continue 3', 'Suggested for you 2']);
-	// The guide for the player's level is always suggested, open or not (its
-	// row says "Tab 1"); level 10 is within two levels of its follow-up (12).
-	assert.deepEqual(out.suggested, ['Elwynn Forest (1\u201313) | Tab 1', 'Westfall (12\u201317)']);
-	assert.equal(out.shown, 3);
+	assert.equal(out.section, 'Home');
+	// Continue already represents Elwynn; level 10 is within two levels of
+	// its follow-up (12). Original tab numbers survive presentation filtering.
+	assert.deepEqual(out.suggested, ['Westfall (12\u201317)']);
+	assert.equal(out.shown, 2);
 	assert.deepEqual(out.info, [
-		['Elwynn Forest', 'Step 3 of 8', '29%', 'Tab 1'],
-		['Tailoring 1-300', 'Step 2 of 4', '25%', 'Tab 2'],
-		['Stormwind Reputation', 'Step 2 of 2', '50%', 'Tab 3'],
+		['Tailoring 1-300', 'Tab 2  \u00b7  25%'],
+		['Stormwind Reputation', 'Tab 3  \u00b7  50%'],
 	]);
-	assert.deepEqual(out.selected, ['forever/professions/tailoring', 'Tailoring 1-300', true]);
+	assert.deepEqual(out.selected, ['forever/professions/tailoring', 'Home', true]);
 	assert.deepEqual(out.continued, [['SetGuide', 'forever/professions/tailoring'], 2, false]);
 });
 
-// "Suggested for you" always names the guide for the player's level, even
-// when it is open; a follow-up only joins it near the end: at level 9,
-// Elwynn Forest (1-13) open must not send the player on to Westfall (12-17).
-test('Home always suggests the guide for the player\'s level, and its follow-up only within two levels', () => {
+// Continue represents the open guide; at level 9 its follow-up is too far.
+test('Home does not repeat Continue or suggest its follow-up more than two levels early', () => {
 	const [out] = run(`
 		uistub.player.level = 9
 		uistub.openTabs(TABS, 1)
-		UI.ShowPicker()
-		emit({ folders = folders(), suggested = lines() })`);
-	assert.deepEqual(out.folders, ['Continue 3', 'Suggested for you 1']);
-	assert.deepEqual(out.suggested, ['Elwynn Forest (1\u201313) | Tab 1']);
+		UI.ShowPicker({ section = "Home" })
+		emit({ suggested = homeLines() })`);
+	assert.deepEqual(out.suggested, {});
 });
 
 test('Current lists the open tabs (tab and progress; check when finished); Recent keeps the last 10 loaded', () => {
 	const [out] = run(`
 		uistub.openTabs(TABS, 1)
 		uistub.complete()
-		UI.ShowPicker()
+		UI.ShowPicker({ section = "Guides", view = "browse" })
 		tab("current"):Click()
 		local r = { view = P.View(), current = lines() }
 		tab("recent"):Click()
@@ -693,7 +695,7 @@ test('Current lists the open tabs (tab and progress; check when finished); Recen
 
 test('Favorites: the star in the details toggles a guide in CharState().ui.favoriteGuides and the Favorites category', () => {
 	const [out] = run(`
-		UI.ShowPicker()
+		UI.ShowPicker({ section = "Guides", view = "browse" })
 		P.Select("forever/alliance/02-westfall")
 		local star = D().Star
 		local r = { before = star.psActive or false }
@@ -723,7 +725,7 @@ test('the details art: the zone\'s painting from the client around the guide\'s 
 		C_Map.GetMapArtLayerTextures = function() local t = {}; for i = 1, 12 do t[i] = 200000 + i end; return t end
 		uistub.guides["forever/alliance/02-westfall"].zone = 1436
 		Polestar.Engine.GuideFocus = function(id) if id == "forever/alliance/02-westfall" then return 56, 47 end end
-		UI.ShowPicker()
+		UI.ShowPicker({ section = "Guides", view = "browse" })
 		P.Select("forever/alliance/02-westfall")
 		local a = D().Art
 		local tiles = 0
@@ -738,7 +740,7 @@ test('the details art: the zone\'s painting from the client around the guide\'s 
 		PolestarPicker:Hide()
 		Polestar.Engine.SetGuide(nil)
 		uistub.suggest = nil
-		UI.ShowPicker()
+		UI.ShowPicker({ section = "Guides", view = "browse" })
 		r.none = { P.detail == nil, D().EmptyTitle:IsShown(), a.Band:IsShown(), D().Load:IsShown() }
 		emit(r)`);
 	assert.equal(out.painted, true);
@@ -761,11 +763,12 @@ test('the Next fact and the suggested follow-ups list only the options offered n
 		local desolace, feralas = "forever/alliance/30-40/02-desolace", "forever/alliance/40-50/03-feralas"
 		local offered = {}
 		Polestar.Engine.RouteOffered = function(from, id) return offered[id] ~= false end
-		UI.ShowPicker()
-		local r = { suggested = lines() }
+		UI.ShowPicker({ section = "Home" })
+		local r = { suggested = homeLines() }
 		offered["forever/alliance/02-westfall"] = false
-		P.Render()
-		r.hidden = lines()
+		Polestar.Fire("STEP_UPDATED")
+		stub.advance(0.01)
+		r.hidden = homeLines()
 		P.SetCategory("Leveling")
 		rowFor("Westfall"):Click()
 		westfall.nextChoices, westfall.nextWhen = { desolace, feralas }, { [feralas] = { { k = "level", op = ">=", n = 43 } } }
@@ -779,8 +782,8 @@ test('the Next fact and the suggested follow-ups list only the options offered n
 		r.none = P.detail.facts[#P.detail.facts][1]
 		westfall.nextChoices, westfall.nextWhen = nil, nil
 		emit(r)`);
-	assert.deepEqual(out.suggested, ['Elwynn Forest (1\u201313) | Tab 1', 'Westfall (12\u201317)']);
-	assert.deepEqual(out.hidden, ['Elwynn Forest (1\u201313) | Tab 1']);
+	assert.deepEqual(out.suggested, ['Westfall (12\u201317)']);
+	assert.deepEqual(out.hidden, {});
 	assert.deepEqual(out.both, ['Next', 'Your choice: Desolace or Feralas']);
 	assert.deepEqual(out.one, ['Next', 'Desolace (31\u201334)']);
 	assert.notEqual(out.none, 'Next');

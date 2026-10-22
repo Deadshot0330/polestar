@@ -117,7 +117,7 @@ test('no heading without a shown pack that has guides', () => {
 			assert(Polestar.RegisterGuide({ id = "forever/a", pack = "guides", title = "A", steps = { { goals = { { t = "level", level = 2 } } } } }))
 			assert(Polestar.RegisterPack({ addon = "EmptyAddon", id = "empty", format = 1, title = "Empty", author = "E", version = "1", license = "MIT" }))
 			stub.login()
-			Polestar.UI.ShowPicker()
+			Polestar.UI.ShowPicker({ section = "Guides", view = "browse" })
 			local out = {}
 			for _, b in ipairs(PolestarPicker.navButtons) do if b:IsShown() then out[#out + 1] = b.Label:GetText() end end
 			emit(out)`,
@@ -142,7 +142,7 @@ test('pack guides carry their pack\'s title in rows and search results', () => {
 
 test('details: the credits line for every guide, with the pack\'s source; the guide\'s own author wins', () => {
 	const [out] = run(`
-		UI.ShowPicker()
+		UI.ShowPicker({ section = "Guides", view = "browse" })
 		local function credits(id)
 			P.Select(id)
 			local d = P.details
@@ -194,7 +194,7 @@ test('the empty states name Polestar Guides and community addons', () => {
 
 test('credits name our pack\'s author, whoever that is (nothing hard-coded)', () => {
 	const [out] = run(`
-		UI.ShowPicker()
+		UI.ShowPicker({ section = "Guides", view = "browse" })
 		P.Select("forever/westfall")
 		emit({ credits = P.details.Credits:GetText() })`, { before: 'OURS_AUTHOR = "The Polestar Team"' });
 	assert.equal(out.credits, 'By The Polestar Team');

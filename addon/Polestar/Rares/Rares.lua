@@ -23,6 +23,8 @@
 --   Rares.Nearest(spawns, point) -> spawn, yards      nearest spawn on the player's continent
 --   Rares.Show(kind, id)                              open the hub section at it (SHOW_RARES)
 --   Rares.Nearby() -> { name, ... }                   rares in range now, newest sighting first (reused list)
+--   Rares.NearbyRecords() -> { { key, id, name, level, elite, source, map, x, y, exact, ... }, ... }
+--       copies of recent detections using the same expiry; never loads Codex.
 -- Messages: RARE_SPOTTED(alert) when an alert fires; RARES_HISTORY(key) when
 -- the history changes; RARE_NEARBY when the rares in range change.
 
@@ -400,7 +402,7 @@ local function stillShown(e)
 end
 
 -- Names of the rares in range, newest sighting first (a reused list).
-function Rares.Nearby()
+local function nearList()
 	local now = clock()
 	local list = {}
 	for key, e in pairs(nearby) do
@@ -409,20 +411,41 @@ function Rares.Nearby()
 		end
 		if nearby[key] then list[#list + 1] = e end
 	end
-	table.sort(list, function(a, b) return a.at > b.at end)
-	wipe(nearbyList)
-	for i = 1, #list do nearbyList[i] = list[i].name end
+	table.sort(list, function(a, b) return a.at > b.at or a.at == b.at and a.key < b.key end)
 	if #list > 0 and not nearbyTimer and C_Timer and C_Timer.After then
 		nearbyTimer = true
-		C_Timer.After(NEAR_FOR, function()
+		-- Querying late must not give an old sighting another full lifetime.
+		-- A small floor also defers a timer landing on the expiry boundary.
+		local delay = NEAR_FOR
+		for _, e in ipairs(list) do delay = math.min(delay, math.max(0.05, NEAR_FOR - (now - e.at))) end
+		C_Timer.After(delay, function()
 			nearbyTimer = false
 			ns.Fire("RARE_NEARBY")
 		end)
 	end
+	return list
+end
+
+function Rares.Nearby()
+	wipe(nearbyList)
+	for i, e in ipairs(nearList()) do nearbyList[i] = e.name end
 	return nearbyList
 end
 
-local function track(s)
+function Rares.NearbyRecords()
+	local out = {}
+	if not get("enabled") then return out, "off" end
+	for _, e in ipairs(nearList()) do
+		if not Rares.IsIgnored(e.key) then
+			local copy = {}
+			for k, v in pairs(e) do copy[k] = v end
+			out[#out + 1] = copy
+		end
+	end
+	return out
+end
+
+local function track(s, where, exact)
 	if s.kind == "treasure" or type(s.name) ~= "string" or s.name == "" then return end
 	local key = Rares.Key("rare", s.id, s.name)
 	if not key then return end
@@ -439,6 +462,9 @@ local function track(s)
 		nearby[key] = e
 	end
 	e.name, e.guid, e.at = s.name, s.guid, clock()
+	e.key, e.id, e.level, e.source = key, s.id, s.level, s.source
+	e.elite = s.classification == "rareelite"
+	e.map, e.x, e.y, e.exact = where and where.map, where and where.x, where and where.y, exact
 	e.vignette = s.vignette or e.vignette
 	ns.Fire("RARE_NEARBY")
 end
@@ -449,12 +475,12 @@ function Rares.Sighting(s, where)
 	local ctx = context()
 	local action, reason = Rares.Decide(s, ctx)
 	if action == "skip" then return action, reason end
-	track(s)
 	local now = ctx.now
 	local exact = where ~= nil
 	if not where and (s.source == "nameplate" or s.source == "target" or s.source == "mouseover") then
 		where = ns.PlayerPoint()
 	end
+	track(s, where, exact)
 	Rares.Record(s, where, now, action == "alert")
 	if action == "alert" then
 		fire(alertOf(s, where, exact))

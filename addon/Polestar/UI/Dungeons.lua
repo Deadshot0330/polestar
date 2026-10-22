@@ -234,24 +234,18 @@ local function bandLabel(key)
 end
 
 local function forYou(d, plevel)
-	if d.kind == "raid" or not d.minLevel then return false end
-	return plevel >= d.minLevel - 2 and plevel <= (d.maxLevel or d.minLevel)
+	return D().MatchesLevel(d, plevel, "All")
 end
 
 -- Quests on a page for the filter ("All": both factions).
 local function questCount(d, f)
-	local q = d.quests or {}
-	if f == "All" then return max(q.A or 0, q.H or 0), q.A or 0, q.H or 0 end
-	return q[SIDE[f]] or 0
+	return D().QuestCount(d, f)
 end
 
 -- For your level under the filter: a dungeon whose quests are all the other
 -- faction's is theirs, not yours.
 local function forYouAs(d, plevel, f)
-	if not forYou(d, plevel) then return false end
-	if f == "All" then return true end
-	local q = d.quests or {}
-	return (q[SIDE[f]] or 0) > 0 or ((q.A or 0) == 0 and (q.H or 0) == 0)
+	return D().MatchesLevel(d, plevel, f)
 end
 
 local function list()
@@ -283,16 +277,7 @@ end
 
 -- Quest state for this character: "done", "ready", "log", "low", "open".
 local function questState(q, plevel)
-	local C = ns.Compat
-	if C and q.id then
-		if C.IsQuestCompleted and C.IsQuestCompleted(q.id) then return "done" end
-		if C.IsOnQuest and C.IsOnQuest(q.id) then
-			if C.IsQuestReadyForTurnIn and C.IsQuestReadyForTurnIn(q.id) then return "ready" end
-			return "log"
-		end
-	end
-	if q.minLevel and plevel < q.minLevel then return "low" end
-	return "open"
+	return D().QuestState(q, plevel)
 end
 
 local STATE_GLYPH = {

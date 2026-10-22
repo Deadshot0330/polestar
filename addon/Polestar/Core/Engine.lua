@@ -3665,9 +3665,30 @@ local function guideTrainsSoon()
 end
 
 local trainChecked -- the level last checked this session
-local function checkTrainDue()
+function Own.trainInterval()
 	local mode = ns.Get("behavior.trainReminder")
-	local every = (mode == "1" and 1) or (mode == "2" and 2) or nil
+	return (mode == "1" and 1) or (mode == "2" and 2) or nil
+end
+function Own.trainIsDue(last, level, every)
+	return every ~= nil and last ~= nil and level ~= nil and last <= level
+		and level - last >= every and (every ~= 2 or level % 2 == 0)
+end
+
+-- Read-only reminder context, not a spell catalogue or proof that a trainer
+-- has something to teach. lastVisit is a real visit; baseline may be the
+-- first-install baseline. Does not fire reminders, select a trainer or train.
+function Engine.TrainingStatus()
+	if not player then refreshPlayer() end
+	local s, every = ns.CharState(), Own.trainInterval()
+	local level = player and player.level
+	local due = Own.trainIsDue(tonumber(s.classTrainLevel), level, every)
+	return { class = player and player.class, level = level, interval = every,
+		baseline = tonumber(s.classTrainLevel), lastVisit = tonumber(s.classTrainVisit),
+		reminderDue = due, guideSoon = guideTrainsSoon() }
+end
+
+local function checkTrainDue()
+	local every = Own.trainInterval()
 	local level = player and player.level
 	if not (every and level) or trainChecked == level then return end
 	trainChecked = level
@@ -3677,7 +3698,7 @@ local function checkTrainDue()
 		s.classTrainLevel = level
 		return
 	end
-	if level - last < every or (every == 2 and level % 2 == 1) or tonumber(s.trainDueShown) == level then return end
+	if not Own.trainIsDue(last, level, every) or tonumber(s.trainDueShown) == level then return end
 	if guideTrainsSoon() then return end
 	local t = Engine.NearestClassTrainer()
 	if not t then return end

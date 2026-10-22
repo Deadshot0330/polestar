@@ -34,6 +34,27 @@ local bought = {}         -- "name\0rank" of the spells bought this visit
 local pending, pendingCost -- the purchase that has not landed yet
 local learned, spent = 0, 0
 local purchases = 0       -- which purchase a LAND_WAIT timer belongs to
+local shownNpc -- valid only while this character's class trainer is open
+
+-- Read-only, current trainer-window services. No persistent catalogue: nil
+-- after closing, for another class/profession, or without the client APIs.
+-- Names, ranks, status and costs are the server's current list; no purchases.
+function Trainer.Services()
+	local E, C = ns.Engine, ns.Compat
+	if not shownNpc or C.GetNpcID("npc") ~= shownNpc or not E.IsClassTrainer(shownNpc) then return nil, "closed" end
+	if not (GetNumTrainerServices and GetTrainerServiceInfo) then return nil, "unavailable" end
+	if IsTradeskillTrainer and IsTradeskillTrainer() then return nil, "closed" end
+	local rows = {}
+	for i = 1, math.min(200, GetNumTrainerServices() or 0) do
+		local name, status, _, _, rank = GetTrainerServiceInfo(i)
+		name, status, rank = C.Readable(name), C.Readable(status), C.Readable(rank)
+		if type(name) == "string" and (status == "available" or status == "unavailable") then
+			local cost = GetTrainerServiceCost and C.Readable(GetTrainerServiceCost(i))
+			rows[#rows + 1] = { name = name, rank = rank, status = status, cost = type(cost) == "number" and cost or nil }
+		end
+	end
+	return rows
+end
 
 local function keyOf(name, rank) return name and (name .. "\0" .. (rank or "")) end
 
@@ -103,6 +124,8 @@ end
 
 function Trainer.OnShow()
 	active, learned, spent, pending = false, 0, 0, nil
+	local E, npc = ns.Engine, ns.Compat.GetNpcID("npc")
+	shownNpc = E and E.IsClassTrainer and E.IsClassTrainer(npc) and npc or nil
 	wipe(bought)
 	if QoL.Shift() or not QoL.On("trainAll") then return end
 	if not (GetNumTrainerServices and GetTrainerServiceInfo and GetTrainerServiceCost and BuyTrainerService) then return end
@@ -114,6 +137,7 @@ function Trainer.OnShow()
 end
 
 function Trainer.OnClosed()
+	shownNpc = nil
 	if active and pending then
 		learned, spent = learned + 1, spent + pendingCost
 		pending = nil

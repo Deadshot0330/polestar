@@ -1561,15 +1561,15 @@ test('the next spot of an area objective takes the arrow there, over a point pic
 test('labels kept in tables are in the client language: the group line and the guide menu\'s tabs', () => {
 	const [out] = run(
 		`
-		UI.ShowPicker()
+		UI.ShowPicker({ section = "Guides", view = "browse" })
 		local tabs = {}
 		for _, b in ipairs(PolestarPicker.tabButtons) do if b:IsShown() then tabs[#tabs + 1] = b.Label:GetText() end end
 		emit({ elite = UI.GroupLine({ party = { kind = "elite", rank = 2 } }), tabs = tabs, title = PolestarPicker.Title:GetText() })`,
 		{ before: fakeLocale('itIT', { 'Rare elite: group advised': 'Rarer Elite: Gruppe empfohlen', Home: 'Start', Browse: 'Stöbern', Current: 'Aktuell', Recent: 'Zuletzt' }) },
 	);
 	assert.match(out.elite, /\|c\w+Rarer Elite: Gruppe empfohlen\|r/);
-	assert.deepEqual(out.tabs, ['Start', 'Stöbern', 'Aktuell', 'Zuletzt']);
-	assert.equal(out.title, 'Start');
+	assert.deepEqual(out.tabs, ['Stöbern', 'Aktuell', 'Zuletzt']);
+	assert.equal(out.title, 'All guides');
 });
 
 test('an escort quest\'s open goal says the NPC may have to respawn, in the dungeon colour, once per card; not once done or skipped', () => {

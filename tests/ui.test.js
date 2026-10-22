@@ -654,6 +654,30 @@ test('empty states: no guides, no guide open (with suggestion), guide complete',
 	], 'start opens a tab; continue replaces the guide in the same tab');
 });
 
+for (const [name, action, newTab] of [
+	['header Choose guide', 'menuPick("Choose guide")', false],
+	['header Open in new tab', 'menuPick("Open in new tab")', true],
+	['tab +', 'GF.parts.strip.Add:Click()', true],
+	['tab Choose guide', `
+		stub.RunScript(shownTabs()[1], "OnClick", "RightButton")
+		for _, r in ipairs(PolestarMenu.rows) do
+			if r:IsShown() and r.Text:GetText() == "Choose guide" then r:Click() break end
+		end`, false],
+]) {
+	test(`${name} opens Guides Browse after another section was visited`, () => {
+		const [out] = run(`
+			uistub.openTabs(TABS, 1)
+			UI.ShowPicker()
+			UI.Picker.SetCategory("Professions")
+			UI.Picker.ShowSection("Import")
+			PolestarPicker:Hide()
+			${action}
+			emit({ shown = PolestarPicker:IsShown(), section = UI.Picker.Section(), view = UI.Picker.View(),
+				category = UI.Picker.Category(), newTab = UI.Picker.IsNewTabMode() })`);
+		assert.deepEqual(out, { shown: true, section: 'Guides', view: 'browse', category: 'Professions', newTab });
+	});
+}
+
 test('tab strip: one tab per open guide; select, close, move, and + opens the picker for a new tab', () => {
 	const [out] = run(`
 		uistub.openTabs(TABS, 1)

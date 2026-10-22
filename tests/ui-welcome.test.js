@@ -482,6 +482,27 @@ test('the start page: Start guide opens the suggested guide, Browse guides opens
 	assert.deepEqual(none, { picker: true, closed: true });
 });
 
+test('Welcome browsing and its no-suggestion fallback enter Guides Browse after another section', () => {
+	const [out] = run(`
+		local UI = Polestar.UI
+		UI.ShowPicker()
+		UI.Picker.SetCategory("Professions")
+		local result = {}
+		for _, action in ipairs({ "Browse", "Start" }) do
+			UI.Picker.ShowSection("Import")
+			PolestarPicker:Hide()
+			uistub.suggest = nil
+			Wel.Show("start")
+			PolestarWelcome[action]:Click()
+			result[#result + 1] = { UI.Picker.Section(), UI.Picker.View(), UI.Picker.Category(), PolestarPicker:IsShown(), shown() }
+		end
+		emit(result)`);
+	assert.deepEqual(out, [
+		['Guides', 'browse', 'Professions', true, false],
+		['Guides', 'browse', 'Professions', true, false],
+	]);
+});
+
 test('Show takes a page by key or by number among the pages shown', () => {
 	const [out] = run(`
 		Wel.Show(4)

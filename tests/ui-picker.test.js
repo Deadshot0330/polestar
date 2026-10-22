@@ -82,6 +82,94 @@ local westfall = uistub.guides["forever/alliance/02-westfall"]
 westfall.pitch, westfall.pros, westfall.cons = "Farms and bandits.", { "Compact", "Flight path" }, { "Long walks" }
 `;
 
+test('explicit sections are selected before the first render, from a cold or already-open hub', () => {
+	const [out] = run(`
+		local rendered = {}
+		UI.RegisterSection({ key = "Test", build = function() end, render = function() rendered[#rendered + 1] = P.Section() end })
+		UI.ShowPicker({ section = "Test" })
+		local cold = P.Section()
+		UI.ShowPicker({ section = "Guides" })
+		local guides = P.Section() == "Guides" and P.ActiveSection() == nil
+		UI.ShowPicker({ section = "Test" })
+		emit({ cold = cold, guides = guides, rendered = rendered })`);
+	assert.deepEqual(out, { cold: 'Test', guides: true, rendered: ['Test', 'Test'] });
+});
+
+for (const hidden of [false, true]) {
+	test(`explicit Guides Browse clears search but keeps the category and selection (${hidden ? 'hidden' : 'open'} hub)`, () => {
+		const [out] = run(`
+			UI.ShowPicker()
+			P.SetQuery("tailoring")
+			P.SetCategory("Professions")
+			P.Select(uistub.tailoring)
+			${hidden ? 'PolestarPicker:Hide()' : ''}
+			UI.ShowPicker({ section = "Guides", view = "browse" })
+			emit({ section = P.Section(), view = P.View(), query = P.Query(), text = P.search:GetText(),
+				category = P.Category(), selected = P.Selected(), shown = PolestarPicker:IsShown(), calls = uistub.calls })`);
+		assert.deepEqual(out, { section: 'Guides', view: 'browse', query: '', text: '', category: 'Professions',
+			selected: 'forever/professions/tailoring', shown: true, calls: {} });
+	});
+}
+
+test('new-tab requests enter Guides Browse; a later ordinary request loads into the current tab', () => {
+	const [out] = run(`
+		uistub.openTabs({ { uistub.elwynn, 3 } }, 1)
+		UI.ShowPicker({ section = "Lookup" })
+		UI.ShowPicker({ newTab = true })
+		local mode = { P.Section(), P.View(), P.IsNewTabMode() }
+		P.Select(uistub.tailoring)
+		P.LoadSelected()
+		UI.ShowPicker({ section = "Guides", view = "browse" })
+		P.Select("forever/professions/first-aid")
+		P.LoadSelected()
+		emit({ mode = mode, newTab = P.IsNewTabMode(), open = lastCall("OpenTab"), replace = lastCall("SetGuide") })`);
+	assert.deepEqual(out.mode, ['Guides', 'browse', true]);
+	assert.equal(out.newTab, false);
+	assert.equal(out.open[1], 'forever/professions/tailoring');
+	assert.equal(out.replace[1], 'forever/professions/first-aid');
+});
+
+test('legacy openers preserve staged sections and views; the general menu still toggles closed', () => {
+	const [out] = run(`
+		Polestar.Fire("TOGGLE_PICKER")
+		local initial = { P.Section(), P.View() }
+		Polestar.Fire("TOGGLE_PICKER")
+		local closed = not PolestarPicker:IsShown()
+		P.ShowSection("Dungeons")
+		UI.ShowPicker()
+		local staged = P.Section()
+		UI.ShowLookup({ query = "wolf" })
+		local lookup = P.Section()
+		Polestar.Fire("SHOW_IMPORT")
+		local import = P.Section()
+		P.SetView("recent")
+		PolestarPicker:Hide()
+		UI.ShowPicker()
+		emit({ initial = initial, closed = closed, staged = staged, lookup = lookup, import = import, view = P.View() })`);
+	assert.deepEqual(out, { initial: ['Guides', 'home'], closed: true, staged: 'Dungeons', lookup: 'Lookup', import: 'Import', view: 'recent' });
+});
+
+test('explicit browsing leaves guide tabs, live and browsed steps, progress and manual targets untouched', () => {
+	const [out] = run(`
+		uistub.openTabs(TABS, 2)
+		uistub.live = 3
+		Polestar.Nav.SetTarget(1429, 40, 50, "Manual target")
+		local E = Polestar.Engine
+		local function state()
+			local tabs, active = E.GetTabs()
+			return { tabs = tabs, active = active, guide = E.GetGuide().id, step = E.GetStepIndex(), live = E.GetLiveStep(),
+				progress = { E.GetProgress() }, target = Polestar.Nav.GetTarget() }
+		end
+		local before = state()
+		uistub.calls = {}
+		UI.ShowPicker({ section = "Guides", view = "browse" })
+		UI.ShowPicker({ section = "Lookup" })
+		UI.ShowPicker({ section = "Guides", view = "browse" })
+		emit({ before = before, after = state(), calls = uistub.calls })`);
+	assert.deepEqual(out.after, out.before);
+	assert.deepEqual(out.calls, {});
+});
+
 test('browse: folders by faction and band, then by category; faction filter and band derivation', () => {
 	const [out] = run(`
 		local alliance = kinds(P.Entries("Alliance", "", "Leveling"))

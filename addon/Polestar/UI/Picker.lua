@@ -1405,15 +1405,22 @@ P.ActiveSection = activeSection
 
 function P.Query() return query end
 
--- Show a section ("Guides" or nil: the guide list). The hub search starts
--- empty in every section.
-function P.ShowSection(key)
+-- Set the destination without rendering: ShowPicker applies its options
+-- before showing the window or refreshing an already-open one.
+local function setSection(key)
 	if key == GUIDES.key then key = nil end
-	if key ~= section and win then
+	if key ~= section then
+		questContext = nil
 		query = ""
-		win.Search:SetText("")
+		if win then win.Search:SetText("") end
 	end
 	section = key
+end
+
+-- Show a section ("Guides" or nil: the guide list). The hub search starts
+-- empty when changing sections.
+function P.ShowSection(key)
+	setSection(key)
 	if win and win:IsShown() then P.Render() end
 end
 
@@ -1883,10 +1890,25 @@ local function build()
 	end
 end
 
--- opts: { newTab = true } when loading should open a new tab.
+-- opts: section = a registered key or "Guides"; with Guides, view = "browse"
+-- starts browsing without a search, retaining the last category. newTab = true
+-- implies Guides Browse and loads into a new tab. Without a destination,
+-- retain the current/staged section and view (legacy openers rely on this).
 function UI.ShowPicker(opts)
 	if not win then build() end
-	newTabMode = type(opts) == "table" and opts.newTab and true or false
+	opts = type(opts) == "table" and opts or {}
+	newTabMode = opts.newTab and true or false
+	if newTabMode then
+		setSection(GUIDES.key)
+	elseif opts.section then
+		setSection(opts.section)
+	end
+	if newTabMode or (opts.section == GUIDES.key and opts.view == "browse") then
+		questContext = nil
+		query, view = "", "browse"
+		win.Search:SetText("")
+		W.ScrollTo(win.Scroll, 0)
+	end
 	-- Remember the last selection; without one, start on the open guide or
 	-- the suggestion.
 	local byId = headersById()
@@ -1925,8 +1947,7 @@ end
 function P.ShowQuest(id)
 	id = readable(id)
 	if type(id) ~= "number" or id <= 0 or id >= math.huge or id % 1 ~= 0 then return false end
-	UI.ShowPicker()
-	P.ShowSection("Guides")
+	UI.ShowPicker({ section = "Guides" })
 	P.SetCategory("All")
 	-- The filter is account-wide: only lift one that hides this character's
 	-- faction, and back to "auto" so an alt of the other faction is not left

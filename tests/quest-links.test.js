@@ -164,6 +164,44 @@ emit({ found = found, query = query, selected = P.Selected(), count = P.shown.gu
 	assert.doesNotMatch(r.preview || '', /Step 2 of/);
 });
 
+test('legacy reopening preserves exact quest-ID filtering; explicit Browse clears it and keeps the category', () => {
+	const r = run(String.raw`
+-- The same display title is deliberately shared by unrelated guides.
+Polestar.Compat.GetQuestTitle = function() return "Tailoring" end
+P.ShowQuest(7)
+local quest = { selected = P.Selected(), count = P.shown.guides }
+PolestarPicker:Hide()
+Polestar.UI.ShowPicker()
+local reopened = { selected = P.Selected(), count = P.shown.guides, query = P.Query() }
+P.SetCategory("Professions")
+Polestar.UI.ShowPicker({ section = "Guides", view = "browse" })
+local browse = { category = P.Category(), query = P.Query(), count = P.shown.guides }
+P.SetQuery("Tailoring")
+emit({ quest = quest, reopened = reopened, browse = browse, selected = P.Selected(), count = P.shown.guides })
+`);
+	assert.deepEqual(r.quest, { selected: 'forever/alliance/human/01-elwynn-forest', count: 1 });
+	assert.deepEqual(r.reopened, { ...r.quest, query: 'Tailoring' });
+	assert.equal(r.browse.category, 'Professions');
+	assert.equal(r.browse.query, '');
+	assert.ok(r.browse.count > 1);
+	assert.equal(r.selected, 'forever/professions/tailoring');
+	assert.equal(r.count, 1, 'typing the old quest title performs a normal text search');
+});
+
+test('/polestar guides leaves a quest search for Browse even when Guides is already visible', () => {
+	const r = run(String.raw`
+P.ShowQuest(7)
+P.SetCategory("Professions")
+SlashCmdList.POLESTAR("guides")
+emit({ section = P.Section(), view = P.View(), query = P.Query(), category = P.Category(), count = P.shown.guides })
+`);
+	assert.equal(r.section, 'Guides');
+	assert.equal(r.view, 'browse');
+	assert.equal(r.query, '');
+	assert.equal(r.category, 'Professions');
+	assert.ok(r.count > 1);
+});
+
 test('menu wording and quest preview follow the client language', () => {
 	const r = run(String.raw`
 Polestar.Compat.GetQuestTitle = function() return "Titolo della missione" end

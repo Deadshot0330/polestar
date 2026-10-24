@@ -4,7 +4,7 @@
 // sends each group to water near where it levels: a fishing-pool cluster from
 // objects.json (role fishing), or the shore where water creatures from
 // npcs.json live. Expert comes from a book (professions.json rank `book`),
-// Artisan from Nat Pagle's quest (quests 6608/6609 -> 6607).
+// Artisan from Nat Pagle's quest (6607; 6608/6609 are optional breadcrumbs).
 
 const R = require('./route');
 const { RACE_GROUPS, REGIONS } = require('./groups');
@@ -101,7 +101,12 @@ function render(ctx) {
 	const spotLines = (def, anchor, to, tip) => {
 		const c = spot(ctx, def, anchor);
 		if (!c) throw new Error(`Fishing: no water found in ${zoneName(ctx, def.zone)}`);
-		return { pt: c.pt, lines: [`zone ${zoneName(ctx, def.zone)}`, `tip ${tip}`, `goto ${fmt(c.pt.x)},${fmt(c.pt.y)} "${def.label}" r 25`, `skill Fishing ${to}`] };
+		// Keep the action on the skill goal: reaching the waypoint must not
+		// leave a beginner with instructions available only in the folded tip.
+		const action = to === 50
+			? `Equip your pole; put Fishing from your spellbook on an action bar. Face the water, cast Fishing, then right-click the bobber when it splashes and loot. Repeat until Fishing ${to}. Optional: use a lure on your equipped pole before casting.`
+			: `Cast Fishing, right-click the bobber when it splashes and loot your catch. Repeat until Fishing ${to}.`;
+		return { pt: c.pt, lines: [`zone ${zoneName(ctx, def.zone)}`, `tip ${tip}`, `goto ${fmt(c.pt.x)},${fmt(c.pt.y)} "${def.label}" r 25`, `skill Fishing ${to} "${action}"`] };
 	};
 
 	L.push(GUIDE_HEADER, 'guide forever/professions/fishing', 'title Fishing 1-300', 'category Professions', 'coords era', 'levels 5-60', 'zone Ironforge', '');
@@ -159,7 +164,7 @@ function render(ctx) {
 	step('Expert Fishing', [
 		`tip Expert Fishing (cap ${expert.max}) is a book, not a trainer rank: ${seller.name} sells ${bookName} in Booty Bay, at the south tip of Stranglethorn Vale, to both factions. Buy it and read it; it needs skill ${expert.minSkill} and level ${expert.minLevel}.`,
 		`level ${expert.minLevel}`,
-		`train Fishing Expert "Buy and read ${bookName} (Expert Fishing)"`,
+		`train Fishing Expert "Read ${bookName} from your bags, or buy and read it if you do not have it (Expert Fishing)"`,
 	]);
 
 	section('Fishing 125-225');
@@ -168,24 +173,25 @@ function render(ctx) {
 	section("Artisan Fishing: Nat Pagle");
 	const artisan = rankInfo(ctx, 'Fishing', 'Artisan');
 	const pagle = ctx.data.quest(6607);
-	for (const [f, zone, accept] of [
-		['Alliance', 'Ironforge', 'accept 6609                             -- Grimnur Stonebrand, Ironforge'],
-		['Horde', 'Orgrimmar', 'accept 6608                             -- Lumak, Orgrimmar'],
-	]) {
-		step('Nat Pagle, Angler Extreme', [
-			`only ${f}`,
-			`zone ${zone}`,
-			`tip Artisan Fishing (cap ${artisan.max}) comes from Nat Pagle in Dustwallow Marsh. The fishing trainer in ${zone} sends you to him; the quest needs skill ${artisan.minSkill} and level ${pagle.minLevel}.`,
-			`skill Fishing ${artisan.minSkill}`,
-			`level ${pagle.minLevel}`,
-			accept,
+	// quests.json marks 6608/6609 as breadcrumbFor 6607 (Questie-Forever);
+	// acceptGate already excludes these from blocking prerequisites. Go to
+	// Nat directly, while still handing in a breadcrumb the player carries.
+	// Keep eligibility as goals, not `when`: an ineligible player must wait
+	// here rather than permanently passing the quest's training transition.
+	for (const [faction, quest] of [['Alliance', 6609], ['Horde', 6608]]) {
+		step('Your introduction to Nat Pagle', [
+			`only ${faction}`,
+			`when onquest ${quest}`,
+			'zone Dustwallow Marsh',
+			'tip You already carry this introduction. Hand it in to Nat Pagle before taking his fishing quest.',
+			`turnin ${quest}`,
 		]);
 	}
 	step('Nat Pagle', [
 		'zone Dustwallow Marsh',
-		'tip Nat Pagle fishes from the shore of a small island off the east coast, south of Theramore.',
-		'turnin 6609 only Alliance',
-		'turnin 6608 only Horde',
+		`tip Artisan Fishing (cap ${artisan.max}) comes from Nat Pagle on a small island south of Theramore. You need Fishing ${artisan.minSkill} and character level ${pagle.minLevel}. Go directly to Nat; the capital trainers' introduction quests are optional. If you already carry one, hand it in here.`,
+		`skill Fishing ${artisan.minSkill}`,
+		`level ${pagle.minLevel}`,
 		'accept 6607',
 	]);
 	for (const f of PAGLE_FISH) {

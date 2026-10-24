@@ -34,42 +34,42 @@ step Fishing: Elwynn Forest (1-50)
   zone Elwynn Forest
   tip Fish here until skill 50. Click the bobber when it splashes; every catch can raise the skill.
   goto 51.2,66.7 "Crystal Lake" r 25
-  skill Fishing 50
+  skill Fishing 50 "Equip your pole; put Fishing from your spellbook on an action bar. Face the water, cast Fishing, then right-click the bobber when it splashes and loot. Repeat until Fishing 50. Optional: use a lure on your equipped pole before casting."
 
 step Fishing: Loch Modan (1-50)
   only Dwarf,Gnome
   zone Loch Modan
   tip Fish here until skill 50. Click the bobber when it splashes; every catch can raise the skill.
   goto 52.6,66.9 "The Loch" r 25
-  skill Fishing 50
+  skill Fishing 50 "Equip your pole; put Fishing from your spellbook on an action bar. Face the water, cast Fishing, then right-click the bobber when it splashes and loot. Repeat until Fishing 50. Optional: use a lure on your equipped pole before casting."
 
 step Fishing: Darkshore (1-50)
   only NightElf
   zone Darkshore
   tip Fish here until skill 50. Click the bobber when it splashes; every catch can raise the skill.
   goto 35.9,46.7 "Auberdine shore" r 25
-  skill Fishing 50
+  skill Fishing 50 "Equip your pole; put Fishing from your spellbook on an action bar. Face the water, cast Fishing, then right-click the bobber when it splashes and loot. Repeat until Fishing 50. Optional: use a lure on your equipped pole before casting."
 
 step Fishing: Durotar (1-50)
   only Orc,Troll
   zone Durotar
   tip Fish here until skill 50. Click the bobber when it splashes; every catch can raise the skill.
   goto 60.6,45.1 "Durotar coast" r 25
-  skill Fishing 50
+  skill Fishing 50 "Equip your pole; put Fishing from your spellbook on an action bar. Face the water, cast Fishing, then right-click the bobber when it splashes and loot. Repeat until Fishing 50. Optional: use a lure on your equipped pole before casting."
 
 step Fishing: The Barrens (1-50)
   only Tauren
   zone The Barrens
   tip Fish here until skill 50. Click the bobber when it splashes; every catch can raise the skill.
   goto 46.3,37.9 "Barrens oasis" r 25
-  skill Fishing 50
+  skill Fishing 50 "Equip your pole; put Fishing from your spellbook on an action bar. Face the water, cast Fishing, then right-click the bobber when it splashes and loot. Repeat until Fishing 50. Optional: use a lure on your equipped pole before casting."
 
 step Fishing: Tirisfal Glades (1-50)
   only Undead
   zone Tirisfal Glades
   tip Fish here until skill 50. Click the bobber when it splashes; every catch can raise the skill.
   goto 35.6,42.7 "Vile Fin shore" r 25
-  skill Fishing 50
+  skill Fishing 50 "Equip your pole; put Fishing from your spellbook on an action bar. Face the water, cast Fishing, then right-click the bobber when it splashes and loot. Repeat until Fishing 50. Optional: use a lure on your equipped pole before casting."
 
 step Journeyman Fishing
   tip Journeyman Fishing raises the cap to 150; it needs skill 50 and character level 10. The arrow picks the nearest Fishing trainer of your faction.
@@ -83,42 +83,42 @@ step Fishing: Westfall (50-125)
   zone Westfall
   tip Fish the pools and open water here until skill 125. Pools (floating debris, schools of fish) also drop extra loot.
   goto 34.6,18.5 "Westfall coast" r 25
-  skill Fishing 125
+  skill Fishing 125 "Cast Fishing, right-click the bobber when it splashes and loot your catch. Repeat until Fishing 125."
 
 step Fishing: Loch Modan (50-125)
   only Dwarf,Gnome
   zone Loch Modan
   tip Fish the pools and open water here until skill 125. Pools (floating debris, schools of fish) also drop extra loot.
   goto 52.6,66.9 "The Loch" r 25
-  skill Fishing 125
+  skill Fishing 125 "Cast Fishing, right-click the bobber when it splashes and loot your catch. Repeat until Fishing 125."
 
 step Fishing: Darkshore (50-125)
   only NightElf
   zone Darkshore
   tip Fish the pools and open water here until skill 125. Pools (floating debris, schools of fish) also drop extra loot.
   goto 35.9,46.7 "Darkshore coast" r 25
-  skill Fishing 125
+  skill Fishing 125 "Cast Fishing, right-click the bobber when it splashes and loot your catch. Repeat until Fishing 125."
 
 step Fishing: The Barrens (50-125)
   only Orc,Troll,Tauren
   zone The Barrens
   tip Fish the pools and open water here until skill 125. Pools (floating debris, schools of fish) also drop extra loot.
   goto 46.3,37.9 "Barrens oasis" r 25
-  skill Fishing 125
+  skill Fishing 125 "Cast Fishing, right-click the bobber when it splashes and loot your catch. Repeat until Fishing 125."
 
 step Fishing: Silverpine Forest (50-125)
   only Undead
   zone Silverpine Forest
   tip Fish the pools and open water here until skill 125. Pools (floating debris, schools of fish) also drop extra loot.
   goto 37.8,32.1 "Lordamere Lake" r 25
-  skill Fishing 125
+  skill Fishing 125 "Cast Fishing, right-click the bobber when it splashes and loot your catch. Repeat until Fishing 125."
 
 # ---------------------------------------------------------------- Expert Fishing
 
 step Expert Fishing
   tip Expert Fishing (cap 225) is a book, not a trainer rank: Old Man Heming sells Expert Fishing - The Bass and You in Booty Bay, at the south tip of Stranglethorn Vale, to both factions. Buy it and read it; it needs skill 125 and level 20.
   level 20
-  train Fishing Expert "Buy and read Expert Fishing - The Bass and You (Expert Fishing)"
+  train Fishing Expert "Read Expert Fishing - The Bass and You from your bags, or buy and read it if you do not have it (Expert Fishing)"
 
 # ---------------------------------------------------------------- Fishing 125-225
 
@@ -127,52 +127,50 @@ step Fishing: Wetlands (125-225)
   zone Wetlands
   tip Fish the pools here until skill 225. If fish keep getting away, fish easier water until your skill catches up.
   goto 10.8,63.1 "Wetlands coast" r 25
-  skill Fishing 225
+  skill Fishing 225 "Cast Fishing, right-click the bobber when it splashes and loot your catch. Repeat until Fishing 225."
 
 step Fishing: Ashenvale (125-225)
   only NightElf
   zone Ashenvale
   tip Fish the pools here until skill 225. If fish keep getting away, fish easier water until your skill catches up.
   goto 35.8,53.7 "Ashenvale waters" r 25
-  skill Fishing 225
+  skill Fishing 225 "Cast Fishing, right-click the bobber when it splashes and loot your catch. Repeat until Fishing 225."
 
 step Fishing: Ashenvale (125-225)
   only Orc,Troll,Tauren
   zone Ashenvale
   tip Fish the pools here until skill 225. If fish keep getting away, fish easier water until your skill catches up.
   goto 47.0,69.7 "Ashenvale waters" r 25
-  skill Fishing 225
+  skill Fishing 225 "Cast Fishing, right-click the bobber when it splashes and loot your catch. Repeat until Fishing 225."
 
 step Fishing: Hillsbrad Foothills (125-225)
   only Undead
   zone Hillsbrad Foothills
   tip Fish the pools here until skill 225. If fish keep getting away, fish easier water until your skill catches up.
   goto 60.8,32.1 "Hillsbrad coast" r 25
-  skill Fishing 225
+  skill Fishing 225 "Cast Fishing, right-click the bobber when it splashes and loot your catch. Repeat until Fishing 225."
 
 # ---------------------------------------------------------------- Artisan Fishing: Nat Pagle
 
-step Nat Pagle, Angler Extreme
+step Your introduction to Nat Pagle
   only Alliance
-  zone Ironforge
-  tip Artisan Fishing (cap 300) comes from Nat Pagle in Dustwallow Marsh. The fishing trainer in Ironforge sends you to him; the quest needs skill 225 and level 35.
-  skill Fishing 225
-  level 35
-  accept 6609                             -- Grimnur Stonebrand, Ironforge
+  when onquest 6609
+  zone Dustwallow Marsh
+  tip You already carry this introduction. Hand it in to Nat Pagle before taking his fishing quest.
+  turnin 6609
 
-step Nat Pagle, Angler Extreme
+step Your introduction to Nat Pagle
   only Horde
-  zone Orgrimmar
-  tip Artisan Fishing (cap 300) comes from Nat Pagle in Dustwallow Marsh. The fishing trainer in Orgrimmar sends you to him; the quest needs skill 225 and level 35.
-  skill Fishing 225
-  level 35
-  accept 6608                             -- Lumak, Orgrimmar
+  when onquest 6608
+  zone Dustwallow Marsh
+  tip You already carry this introduction. Hand it in to Nat Pagle before taking his fishing quest.
+  turnin 6608
 
 step Nat Pagle
   zone Dustwallow Marsh
-  tip Nat Pagle fishes from the shore of a small island off the east coast, south of Theramore.
-  turnin 6609 only Alliance
-  turnin 6608 only Horde
+  tip Artisan Fishing (cap 300) comes from Nat Pagle on a small island south of Theramore. You need Fishing 225 and character level 35. Go directly to Nat; the capital trainers' introduction quests are optional. If you already carry one, hand it in here.
+  skill Fishing 225
+  level 35
   accept 6607
 
 step Sar'theris Striker
@@ -205,4 +203,4 @@ step Fishing: Stranglethorn Vale (225-300)
   zone Stranglethorn Vale
   tip Fish the pools along the coast here (eels, snappers, wreckage) until skill 300. Booty Bay sells bait and Nightcrawlers for a small fishing bonus.
   goto 27.5,76.5 "Booty Bay coast" r 25
-  skill Fishing 300
+  skill Fishing 300 "Cast Fishing, right-click the bobber when it splashes and loot your catch. Repeat until Fishing 300."

@@ -1,10 +1,11 @@
 'use strict';
 // Profession trainers and rank sources. Blizzard's client tables do not say
 // who trains what (trainer lists are server data), so this is a curated table
-// of NPC names from general game knowledge of Classic (Era) cities and outposts.
+// of NPC names from Classic (Era) cities and outposts, plus sourced Forever
+// additions documented beside their entries.
 // Every name is checked against npcs.json at build time: it must exist, be
 // unique on the given side and have spawns, else it is dropped with a
-// warning. Nothing here is copied from a leveling or profession guide.
+// warning. No leveling or profession guide prose or routes are copied.
 //
 // Per profession:
 //   train   { Alliance: [names], Horde: [names] }   Apprentice and Journeyman
@@ -171,9 +172,16 @@ const CURATED = {
 	},
 	356: {
 		name: 'Fishing',
+		// Neutral Zephras trainers: Questie-Forever npcs.json identifies Fenn
+		// Fairweather (251992) and Baelann Swiftcurrent (257008) as AH fishing
+		// trainers, with live-frame spawns. Listed for both factions so the
+		// existing nearest-trainer lookup can use them. Reported early-rank
+		// offerings below still need an in-game check:
+		// https://www.wow-professions.com/forever/npc/baelann-swiftcurrent
+		// https://www.wow-professions.com/forever/npc/fenn-fairweather
 		train: {
-			Alliance: ['Arnold Leland', 'Lee Brown', 'Grimnur Stonebrand', 'Paxton Ganter', 'Astaia'],
-			Horde: ['Lumak', 'Kah Mistrunner', 'Armand Cromwell', 'Clyde Kellen'],
+			Alliance: ['Arnold Leland', 'Lee Brown', 'Grimnur Stonebrand', 'Paxton Ganter', 'Astaia', 'Baelann Swiftcurrent', 'Fenn Fairweather'],
+			Horde: ['Lumak', 'Kah Mistrunner', 'Armand Cromwell', 'Clyde Kellen', 'Baelann Swiftcurrent', 'Fenn Fairweather'],
 		},
 		book: { item: 16083, vendors: { Alliance: ['Old Man Heming'], Horde: ['Old Man Heming'] } },
 		quest: { Alliance: ['Nat Pagle'], Horde: ['Nat Pagle'] },

@@ -57,7 +57,7 @@ test('Fishing instructions remain on the tracked activity after reaching its way
 	assert.equal(out.manual, false);
 	assert.deepEqual([out.progress.cur, out.progress.max], [1, 50]);
 	assert.match(out.text, /[Ee]quip/);
-	assert.match(out.text, /spellbook/);
+	assert.match(out.text, /Fishing action on an action bar/);
 	assert.match(out.text, /[Cc]ast/);
 	assert.match(out.text, /bobber/);
 });
@@ -93,6 +93,34 @@ test('Artisan waits for character level and skill without permanently skipping e
 	assert.deepEqual(out, { low: 1, levelReady: 1, skillReady: 1, accepted: 2 });
 	assert.ok(step.goals.some((g) => g.t === 'level' && g.level === 35));
 	assert.ok(step.goals.some((g) => g.t === 'skill' && g.level === 225));
+});
+
+test('Skyborne on either faction can train both early Fishing ranks locally in the live Zephras frame', { skip }, () => {
+	const { guide, data } = compiled();
+	const frame = data.mapFrames.forever[2521];
+	for (const rank of [1, 2]) {
+		const step = guide.steps.find((s) => s.goals.some((g) => g.t === 'train' && g.rank === rank));
+		const train = step.goals.find((g) => g.t === 'train');
+		for (const npc of [251992, 257008]) {
+			const candidate = train.candidates.find((c) => c.npc === npc && c.map === 2521);
+			assert.ok(candidate, `rank ${rank} includes trainer ${npc}`);
+			assert.equal(candidate.faction, 'AH');
+			assert.equal(candidate.f, undefined, 'live coordinates must not be tagged as Era');
+			for (const [faction, raceID] of [['Alliance', 95], ['Horde', 96]]) {
+				const before = `local w = stub.world
+					w.race, w.raceName, w.raceID, w.faction, w.level = "Skyborne", "Skyborne", ${raceID}, "${faction}", 10
+					w.addMap(2521, { name = "Zephras Isle", c = ${frame.c}, left = ${frame.left}, right = ${frame.right}, top = ${frame.top}, bottom = ${frame.bottom} })
+					w.moveTo(2521, ${candidate.x}, ${candidate.y})
+					${rank === 2 ? 'w.learnSkill(356, "Fishing", 50, 75)' : ''}`;
+				const out = play([{ ...step, goals: [train] }], before, `
+					local g = E.GetStepView(1).goals[1]
+					local r = { npc = g.npc, map = g.map, era = g.f == "e", at = E.GetStepIndex() }
+					w.learnSkill(356, "Fishing", ${rank === 1 ? 1 : 50}, ${train.rankMax}); flush()
+					r.learned = E.GetStepIndex(); emit(r)`);
+				assert.deepEqual(out, { npc, map: 2521, era: false, at: 1, learned: 2 }, `${faction}, rank ${rank}, trainer ${npc}`);
+			}
+		}
+	}
 });
 
 test('Expert uses the learned cap: an owned unread book still needs learning, a learned rank needs no purchase', { skip }, () => {

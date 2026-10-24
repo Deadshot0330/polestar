@@ -34,42 +34,42 @@ step Fishing: Elwynn Forest (1-50)
   zone Elwynn Forest
   tip Fish here until skill 50. Click the bobber when it splashes; every catch can raise the skill.
   goto 51.2,66.7 "Crystal Lake" r 25
-  skill Fishing 50 "Equip your pole; put Fishing from your spellbook on an action bar. Face the water, cast Fishing, then right-click the bobber when it splashes and loot. Repeat until Fishing 50. Optional: use a lure on your equipped pole before casting."
+  skill Fishing 50 "Equip your pole; put the Fishing action on an action bar. Face the water, cast Fishing, then right-click the bobber when it splashes and loot. Repeat until Fishing 50. Optional: use a lure on your equipped pole before casting."
 
 step Fishing: Loch Modan (1-50)
   only Dwarf,Gnome
   zone Loch Modan
   tip Fish here until skill 50. Click the bobber when it splashes; every catch can raise the skill.
   goto 52.6,66.9 "The Loch" r 25
-  skill Fishing 50 "Equip your pole; put Fishing from your spellbook on an action bar. Face the water, cast Fishing, then right-click the bobber when it splashes and loot. Repeat until Fishing 50. Optional: use a lure on your equipped pole before casting."
+  skill Fishing 50 "Equip your pole; put the Fishing action on an action bar. Face the water, cast Fishing, then right-click the bobber when it splashes and loot. Repeat until Fishing 50. Optional: use a lure on your equipped pole before casting."
 
 step Fishing: Darkshore (1-50)
   only NightElf
   zone Darkshore
   tip Fish here until skill 50. Click the bobber when it splashes; every catch can raise the skill.
   goto 35.9,46.7 "Auberdine shore" r 25
-  skill Fishing 50 "Equip your pole; put Fishing from your spellbook on an action bar. Face the water, cast Fishing, then right-click the bobber when it splashes and loot. Repeat until Fishing 50. Optional: use a lure on your equipped pole before casting."
+  skill Fishing 50 "Equip your pole; put the Fishing action on an action bar. Face the water, cast Fishing, then right-click the bobber when it splashes and loot. Repeat until Fishing 50. Optional: use a lure on your equipped pole before casting."
 
 step Fishing: Durotar (1-50)
   only Orc,Troll
   zone Durotar
   tip Fish here until skill 50. Click the bobber when it splashes; every catch can raise the skill.
   goto 60.6,45.1 "Durotar coast" r 25
-  skill Fishing 50 "Equip your pole; put Fishing from your spellbook on an action bar. Face the water, cast Fishing, then right-click the bobber when it splashes and loot. Repeat until Fishing 50. Optional: use a lure on your equipped pole before casting."
+  skill Fishing 50 "Equip your pole; put the Fishing action on an action bar. Face the water, cast Fishing, then right-click the bobber when it splashes and loot. Repeat until Fishing 50. Optional: use a lure on your equipped pole before casting."
 
 step Fishing: The Barrens (1-50)
   only Tauren
   zone The Barrens
   tip Fish here until skill 50. Click the bobber when it splashes; every catch can raise the skill.
   goto 46.3,37.9 "Barrens oasis" r 25
-  skill Fishing 50 "Equip your pole; put Fishing from your spellbook on an action bar. Face the water, cast Fishing, then right-click the bobber when it splashes and loot. Repeat until Fishing 50. Optional: use a lure on your equipped pole before casting."
+  skill Fishing 50 "Equip your pole; put the Fishing action on an action bar. Face the water, cast Fishing, then right-click the bobber when it splashes and loot. Repeat until Fishing 50. Optional: use a lure on your equipped pole before casting."
 
 step Fishing: Tirisfal Glades (1-50)
   only Undead
   zone Tirisfal Glades
   tip Fish here until skill 50. Click the bobber when it splashes; every catch can raise the skill.
   goto 35.6,42.7 "Vile Fin shore" r 25
-  skill Fishing 50 "Equip your pole; put Fishing from your spellbook on an action bar. Face the water, cast Fishing, then right-click the bobber when it splashes and loot. Repeat until Fishing 50. Optional: use a lure on your equipped pole before casting."
+  skill Fishing 50 "Equip your pole; put the Fishing action on an action bar. Face the water, cast Fishing, then right-click the bobber when it splashes and loot. Repeat until Fishing 50. Optional: use a lure on your equipped pole before casting."
 
 step Journeyman Fishing
   tip Journeyman Fishing raises the cap to 150; it needs skill 50 and character level 10. The arrow picks the nearest Fishing trainer of your faction.

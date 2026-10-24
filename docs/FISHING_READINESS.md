@@ -64,9 +64,19 @@ The guide's existing provenance note applies: inherited spawn observations
 are not verified Forever casting locations. Era coordinates use `f: e`;
 Forever observations use `f: l`. The projector converts through world space.
 No coordinate, rank default, race group or reference correction changed.
+The Fishing entry in the shared trainer registry now includes two neutral
+Zephras trainers, using their existing names, IDs and live spawns from
+Questie-Forever: Fenn Fairweather (251992) and Baelann Swiftcurrent (257008).
 THIRD_PARTY.md and corrections.json require independent, attributable
-evidence for new facts. Editorial web guides were research leads only;
-no editorial prose or routes were copied. Wowhead's Forever entity pages
+evidence for new facts. The trainer identities, roles, factions and spawns
+are independently supported by the local Forever data. These pages report
+Apprentice/Journeyman offerings; current server offerings still need an
+in-game check:
+
+- https://www.wow-professions.com/forever/npc/baelann-swiftcurrent
+- https://www.wow-professions.com/forever/npc/fenn-fairweather
+
+No editorial prose or routes were copied. Wowhead's Forever entity pages
 were inaccessible behind a JavaScript challenge during this review.
 
 ## Findings and scope
@@ -74,9 +84,10 @@ were inaccessible behind a JavaScript challenge during this review.
 | Candidate | Evidence and disposition |
 |---|---|
 | Apprentice eligibility | Fishing is classified as secondary in extract.js; trainers.js applies the level-one override only to gathering. Both the shared default and the guide currently say level 5. Client rank spell extraction does not prove server trainer eligibility. Editorial sources suggest level one, but an independent Forever trainer/server observation is still needed. Retained current values. |
-| Local trainers | The curated Fishing list omits NPCs present as trainers in the merged data: Androl Oakhand 3607 (Alliance, Teldrassil, Era), Lau'Tiki 5941 (Horde, Durotar, Era), and Uthan Stillwater 5938 (Horde, Mulgore, live). Their identities, faction and spawns are supported; which ranks they currently teach still need verification. No expansion of the shared trainer table in this slice. |
-| Skyborne | races.json supports Skyborne on both factions. RACE_GROUPS and REGIONS omit them, so ordinary race-filtered Fishing bands do not cover them. These groups also serve the other gathering guides; changing them requires reviewing those consumers. No verified starting Fishing trainer/access/casting route was established for either Skyborne faction. Still unresolved. |
-| Casting instructions | Ordinary activities previously exposed only a generic skill target when tips were folded. The skill goal now explains equipping the pole, finding Fishing in the spellbook, casting, the bobber and looting; early activities also explain an optional lure. The same skill/event tracking remains responsible for completion. Exact client UI placement and usability still need an in-game check. |
+| Local trainers | The Fishing registry now includes Baelann Swiftcurrent and Fenn Fairweather for both factions and both trainer-taught ranks. Questie-Forever identifies them as neutral Fishing trainers on Zephras Isle; the existing pole-vendor data also includes both. Their exact server offerings remain an in-game check. Androl Oakhand 3607, Lau'Tiki 5941 and Uthan Stillwater 5938 remain separate candidates for later verification. |
+| Skyborne | races.json supports Skyborne on both factions. Both can now select the two neutral Zephras trainers through existing profession training goals. This is trainer access only: RACE_GROUPS and REGIONS still omit Skyborne, so ordinary race-filtered Fishing bands and their beginner instructions do not cover them. No fishing route or water location was added. The earlier audit missed these two named NPC entries; the follow-up search corrected that evidence gap. |
+| Riverglades | Krix (260558) is marked Alliance in the local Questie-Forever data, conflicting with the supplied neutral listing. Krix was not added. |
+| Casting instructions | Ordinary activities previously exposed only a generic skill target when tips were folded. The skill goal now explains equipping the pole, putting the Fishing action on an action bar, casting, the bobber and looting; early activities also explain an optional lure. It avoids assuming a spellbook or Professions tab location, which has not been verified in game. The same skill/event tracking remains responsible for completion. Finding the action in the current client and the instructions' usability still need an in-game check. |
 | Ordinary progression travel | Existing code states skill gains depend on successful catches, not a new zone at each threshold; it nevertheless selects fixed race/region bands. Bands and coordinates remain unchanged to avoid mixing unverified water changes and #719's correction into this slice. No automatic nearest-water logic was added. |
 | Expert book | The existing `train Fishing Expert` goal completes from learned cap 225, rather than possession of item 16083 or opening a vendor. No separate buy goal is needed. Wording now tells a player to read an owned copy first. Regression coverage checks an unread owned book, a vendor visit and an already learned cap. No `when knows` dependency. |
 | Artisan fish | Quest 6607 names all four fish and their required areas. The current generator derives three locations from shore-NPC clusters and gives Feralas Ahi 16967 no explicit coordinate. Neither those cluster centroids nor a generic river point proves a castable spot or the right subzone. All four require recorded casting evidence; no waypoint was invented here. |
@@ -85,22 +96,35 @@ were inaccessible behind a JavaScript challenge during this review.
 ## Validation and next work
 
 The implementation is the Fishing generator plus its regenerated guide,
-focused compiler/Engine tests and a player changelog fragment. All six
-gathering outputs were rebuilt; only Fishing differed. Compiled Guides.lua
-and translations are left for the maintainer's normal regeneration.
+the Fishing trainer registry entry, focused compiler/Engine and trainer
+resolution tests, and a player changelog fragment. All six
+gathering outputs were rebuilt; only Fishing differs from upstream. The
+trainer follow-up changes no guide source text because profession training
+goals resolve candidates from professions.json. Rebuilding that file offline
+changed only profession 356 (Fishing), with no warnings; all six gathering
+sources stayed identical to the earlier Fishing commit. Maintainer
+regeneration must rebuild professions.json before compiling the guides to
+include the new candidates. Compiled Guides.lua and translations are left
+for that normal regeneration.
 
 The new regression tests were run against the original generator first:
 three failed, while the existing Expert-cap behavior passed. The changed
 generator passes all four. They simulate skill/quest state and waypoint
 arrival, not real casts or server quest offers.
 
+Two additional trainer regressions failed before the registry addition and
+pass afterward: a data-independent resolver test covers both factions and
+rank boundaries; a compiler/Engine test exercises eight combinations (two
+trainers, two early ranks, two Skyborne factions), preserving live frames,
+choosing the local trainer and completing from the learned cap. These are
+trainer-state simulations, not full Skyborne guide playthroughs.
+
 Results:
 
-- **Passed:** `node --test tests/profession-fishing.test.js
+- **Passed:** `node --test tests/profession.test.js tests/profession-fishing.test.js
   tests/profession-gathering.test.js tests/dsl-smart.test.js
-  tests/engine-smart.test.js`: 43 passed, no failures or skips. The
-  strengthened waypoint-arrival test was then rerun: all four Fishing
-  tests passed, including confirmation that the waypoint itself was done.
+  tests/engine-smart.test.js`: 66 passed, no failures or skips. This replaces
+  the earlier 43-test run with the expanded profession coverage.
 - **Passed:** `profession gathering check`: all six files current.
   Each generated file was compared with HEAD; the other five are unchanged.
 - **Passed:** `lint`: 0 errors, 316 warnings, no Fishing source diagnostics.
@@ -131,8 +155,9 @@ the three local trainers' offered ranks, both Skyborne starts, and ordinary
 skill gains in easy water. Those observations can support a later change
 that lets ordinary progression stay in convenient water without a new planner.
 
-In-game checks still required: the beginner action text and lure interaction,
-Expert book learning, Nat's direct quest offer at level 35/Fishing 225 with
+In-game checks still required: Baelann and Fenn's current Apprentice and
+Journeyman offerings and access for both factions; the beginner action text
+and lure interaction; Expert book learning; Nat's direct quest offer at level 35/Fishing 225 with
 neither introduction completed, carried introductions on both factions,
 and all actual casting locations. No addon installation, publishing, push,
 PR or comments were performed.

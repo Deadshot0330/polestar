@@ -104,7 +104,7 @@ function render(ctx) {
 		// Keep the action on the skill goal: reaching the waypoint must not
 		// leave a beginner with instructions available only in the folded tip.
 		const action = to === 50
-			? `Equip your pole; put Fishing from your spellbook on an action bar. Face the water, cast Fishing, then right-click the bobber when it splashes and loot. Repeat until Fishing ${to}. Optional: use a lure on your equipped pole before casting.`
+			? `Equip your pole; put the Fishing action on an action bar. Face the water, cast Fishing, then right-click the bobber when it splashes and loot. Repeat until Fishing ${to}. Optional: use a lure on your equipped pole before casting.`
 			: `Cast Fishing, right-click the bobber when it splashes and loot your catch. Repeat until Fishing ${to}.`;
 		return { pt: c.pt, lines: [`zone ${zoneName(ctx, def.zone)}`, `tip ${tip}`, `goto ${fmt(c.pt.x)},${fmt(c.pt.y)} "${def.label}" r 25`, `skill Fishing ${to} "${action}"`] };
 	};

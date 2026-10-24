@@ -128,6 +128,23 @@ test('trainers: curated names resolve per side; missing ones warn instead of gue
 	assert.equal(cooking.ranks[3].minSkill, 225);
 });
 
+test('Fishing: neutral Zephras trainers serve both factions for the two trainer-taught ranks', () => {
+	// Identities, faction and live spawns: Questie-Forever npcs.json.
+	const npcs = {
+		251992: { id: 251992, name: 'Fenn Fairweather', faction: 'AH', spawns: { 2521: { f: 'l', pts: [[45.05, 48.39]] } } },
+		257008: { id: 257008, name: 'Baelann Swiftcurrent', faction: 'AH', spawns: { 2521: { f: 'l', pts: [[63.2, 75.88]] } } },
+	};
+	const result = resolveTrainers(356, npcs, { kind: 'secondary' });
+	for (const side of ['Alliance', 'Horde']) {
+		assert.deepEqual(result.trainers[side], [251992, 257008]);
+		for (const rank of result.ranks.slice(0, 2)) assert.deepEqual(rank.trainers[side], [251992, 257008]);
+	}
+	for (const rank of result.ranks.slice(2)) assert.equal(rank.trainers, undefined, 'Expert and Artisan keep their book/quest sources');
+	assert.equal(result.ranks[2].book.item, 16083);
+	assert.equal(result.ranks[3].minSkill, 225);
+	assert.equal(result.warnings.some((w) => /Fenn Fairweather|Baelann Swiftcurrent/.test(w)), false);
+});
+
 test('build writes the same professions.json twice and reads limited stock', async () => {
 	const a = tmpFile('a.json');
 	const b = tmpFile('b.json');

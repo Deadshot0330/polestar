@@ -83,42 +83,42 @@ step Fishing: Westfall (50-125)
   zone Westfall
   tip Fish the pools and open water here until skill 125. Pools (floating debris, schools of fish) also drop extra loot.
   goto 34.6,18.5 "Westfall coast" r 25
-  skill Fishing 125 "Cast Fishing, right-click the bobber when it splashes and loot your catch. Repeat until Fishing 125."
+  skill Fishing 125 "Fish until skill 125."
 
 step Fishing: Loch Modan (50-125)
   only Dwarf,Gnome
   zone Loch Modan
   tip Fish the pools and open water here until skill 125. Pools (floating debris, schools of fish) also drop extra loot.
   goto 52.6,66.9 "The Loch" r 25
-  skill Fishing 125 "Cast Fishing, right-click the bobber when it splashes and loot your catch. Repeat until Fishing 125."
+  skill Fishing 125 "Fish until skill 125."
 
 step Fishing: Darkshore (50-125)
   only NightElf
   zone Darkshore
   tip Fish the pools and open water here until skill 125. Pools (floating debris, schools of fish) also drop extra loot.
   goto 35.9,46.7 "Darkshore coast" r 25
-  skill Fishing 125 "Cast Fishing, right-click the bobber when it splashes and loot your catch. Repeat until Fishing 125."
+  skill Fishing 125 "Fish until skill 125."
 
 step Fishing: The Barrens (50-125)
   only Orc,Troll,Tauren
   zone The Barrens
   tip Fish the pools and open water here until skill 125. Pools (floating debris, schools of fish) also drop extra loot.
   goto 46.3,37.9 "Barrens oasis" r 25
-  skill Fishing 125 "Cast Fishing, right-click the bobber when it splashes and loot your catch. Repeat until Fishing 125."
+  skill Fishing 125 "Fish until skill 125."
 
 step Fishing: Silverpine Forest (50-125)
   only Undead
   zone Silverpine Forest
   tip Fish the pools and open water here until skill 125. Pools (floating debris, schools of fish) also drop extra loot.
   goto 37.8,32.1 "Lordamere Lake" r 25
-  skill Fishing 125 "Cast Fishing, right-click the bobber when it splashes and loot your catch. Repeat until Fishing 125."
+  skill Fishing 125 "Fish until skill 125."
 
 # ---------------------------------------------------------------- Expert Fishing
 
 step Expert Fishing
   tip Expert Fishing (cap 225) is a book, not a trainer rank: Old Man Heming sells Expert Fishing - The Bass and You in Booty Bay, at the south tip of Stranglethorn Vale, to both factions. Buy it and read it; it needs skill 125 and level 20.
   level 20
-  train Fishing Expert "Read Expert Fishing - The Bass and You from your bags, or buy and read it if you do not have it (Expert Fishing)"
+  train Fishing Expert "Buy and read Expert Fishing - The Bass and You (Expert Fishing)"
 
 # ---------------------------------------------------------------- Fishing 125-225
 
@@ -127,28 +127,28 @@ step Fishing: Wetlands (125-225)
   zone Wetlands
   tip Fish the pools here until skill 225. If fish keep getting away, fish easier water until your skill catches up.
   goto 10.8,63.1 "Wetlands coast" r 25
-  skill Fishing 225 "Cast Fishing, right-click the bobber when it splashes and loot your catch. Repeat until Fishing 225."
+  skill Fishing 225 "Fish until skill 225."
 
 step Fishing: Ashenvale (125-225)
   only NightElf
   zone Ashenvale
   tip Fish the pools here until skill 225. If fish keep getting away, fish easier water until your skill catches up.
   goto 35.8,53.7 "Ashenvale waters" r 25
-  skill Fishing 225 "Cast Fishing, right-click the bobber when it splashes and loot your catch. Repeat until Fishing 225."
+  skill Fishing 225 "Fish until skill 225."
 
 step Fishing: Ashenvale (125-225)
   only Orc,Troll,Tauren
   zone Ashenvale
   tip Fish the pools here until skill 225. If fish keep getting away, fish easier water until your skill catches up.
   goto 47.0,69.7 "Ashenvale waters" r 25
-  skill Fishing 225 "Cast Fishing, right-click the bobber when it splashes and loot your catch. Repeat until Fishing 225."
+  skill Fishing 225 "Fish until skill 225."
 
 step Fishing: Hillsbrad Foothills (125-225)
   only Undead
   zone Hillsbrad Foothills
   tip Fish the pools here until skill 225. If fish keep getting away, fish easier water until your skill catches up.
   goto 60.8,32.1 "Hillsbrad coast" r 25
-  skill Fishing 225 "Cast Fishing, right-click the bobber when it splashes and loot your catch. Repeat until Fishing 225."
+  skill Fishing 225 "Fish until skill 225."
 
 # ---------------------------------------------------------------- Artisan Fishing: Nat Pagle
 
@@ -203,4 +203,4 @@ step Fishing: Stranglethorn Vale (225-300)
   zone Stranglethorn Vale
   tip Fish the pools along the coast here (eels, snappers, wreckage) until skill 300. Booty Bay sells bait and Nightcrawlers for a small fishing bonus.
   goto 27.5,76.5 "Booty Bay coast" r 25
-  skill Fishing 300 "Cast Fishing, right-click the bobber when it splashes and loot your catch. Repeat until Fishing 300."
+  skill Fishing 300 "Fish until skill 300."

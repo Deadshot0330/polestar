@@ -105,7 +105,7 @@ function render(ctx) {
 		// leave a beginner with instructions available only in the folded tip.
 		const action = to === 50
 			? `Equip your pole; put the Fishing action on an action bar. Face the water, cast Fishing, then right-click the bobber when it splashes and loot. Repeat until Fishing ${to}. Optional: use a lure on your equipped pole before casting.`
-			: `Cast Fishing, right-click the bobber when it splashes and loot your catch. Repeat until Fishing ${to}.`;
+			: `Fish until skill ${to}.`;
 		return { pt: c.pt, lines: [`zone ${zoneName(ctx, def.zone)}`, `tip ${tip}`, `goto ${fmt(c.pt.x)},${fmt(c.pt.y)} "${def.label}" r 25`, `skill Fishing ${to} "${action}"`] };
 	};
 
@@ -164,7 +164,7 @@ function render(ctx) {
 	step('Expert Fishing', [
 		`tip Expert Fishing (cap ${expert.max}) is a book, not a trainer rank: ${seller.name} sells ${bookName} in Booty Bay, at the south tip of Stranglethorn Vale, to both factions. Buy it and read it; it needs skill ${expert.minSkill} and level ${expert.minLevel}.`,
 		`level ${expert.minLevel}`,
-		`train Fishing Expert "Read ${bookName} from your bags, or buy and read it if you do not have it (Expert Fishing)"`,
+		`train Fishing Expert "Buy and read ${bookName} (Expert Fishing)"`,
 	]);
 
 	section('Fishing 125-225');

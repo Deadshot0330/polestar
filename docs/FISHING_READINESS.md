@@ -69,12 +69,11 @@ Zephras trainers, using their existing names, IDs and live spawns from
 Questie-Forever: Fenn Fairweather (251992) and Baelann Swiftcurrent (257008).
 THIRD_PARTY.md and corrections.json require independent, attributable
 evidence for new facts. The trainer identities, roles, factions and spawns
-are independently supported by the local Forever data. These pages report
+are independently supported by the local Forever data. The references for
+[Baelann](https://www.wow-professions.com/forever/npc/baelann-swiftcurrent) and
+[Fenn](https://www.wow-professions.com/forever/npc/fenn-fairweather) report
 Apprentice/Journeyman offerings; current server offerings still need an
-in-game check:
-
-- https://www.wow-professions.com/forever/npc/baelann-swiftcurrent
-- https://www.wow-professions.com/forever/npc/fenn-fairweather
+in-game check.
 
 No editorial prose or routes were copied. Public Forever entity pages
 were inaccessible behind a JavaScript challenge during this review.
@@ -87,9 +86,9 @@ were inaccessible behind a JavaScript challenge during this review.
 | Local trainers | The Fishing registry now includes Baelann Swiftcurrent and Fenn Fairweather for both factions and both trainer-taught ranks. Questie-Forever identifies them as neutral Fishing trainers on Zephras Isle; the existing pole-vendor data also includes both. Their exact server offerings remain an in-game check. Androl Oakhand 3607, Lau'Tiki 5941 and Uthan Stillwater 5938 remain separate candidates for later verification. |
 | Skyborne | races.json supports Skyborne on both factions. Both can now select the two neutral Zephras trainers through existing profession training goals. This is trainer access only: RACE_GROUPS and REGIONS still omit Skyborne, so ordinary race-filtered Fishing bands and their beginner instructions do not cover them. No fishing route or water location was added. The earlier audit missed these two named NPC entries; the follow-up search corrected that evidence gap. |
 | Riverglades | Krix (260558) is marked Alliance in the local Questie-Forever data, conflicting with the supplied neutral listing. Krix was not added. |
-| Casting instructions | Ordinary activities previously exposed only a generic skill target when tips were folded. The skill goal now explains equipping the pole, putting the Fishing action on an action bar, casting, the bobber and looting; early activities also explain an optional lure. It avoids assuming a spellbook or Professions tab location, which has not been verified in game. The same skill/event tracking remains responsible for completion. Finding the action in the current client and the instructions' usability still need an in-game check. |
+| Casting instructions | The first fishing activity explains equipping the pole, putting the Fishing action on an action bar, casting, the bobber, looting and an optional lure directly on the tracked skill goal. Later activities use the short instruction "Fish until skill N", where N is the actual target (125, 225 or 300). It avoids assuming a spellbook or Professions tab location. The same skill/event tracking remains responsible for completion. Finding the action in the current client and the instructions' usability still need an in-game check. |
 | Ordinary progression travel | Existing code states skill gains depend on successful catches, not a new zone at each threshold; it nevertheless selects fixed race/region bands. Bands and coordinates remain unchanged to avoid mixing unverified water changes and #719's correction into this slice. No automatic nearest-water logic was added. |
-| Expert book | The existing `train Fishing Expert` goal completes from learned cap 225, rather than possession of item 16083 or opening a vendor. No separate buy goal is needed. Wording now tells a player to read an owned copy first. Regression coverage checks an unread owned book, a vendor visit and an already learned cap. No `when knows` dependency. |
+| Expert book | The original "Buy and read" instruction is retained. The existing `train Fishing Expert` goal completes from learned cap 225, rather than possession of item 16083 or opening a vendor. No separate buy goal is added. Regression coverage protects the existing unread-book, vendor-visit and already-learned-cap behavior. No `when knows` dependency. |
 | Artisan fish | Quest 6607 names all four fish and their required areas. The current generator derives three locations from shore-NPC clusters and gives Feralas Ahi 16967 no explicit coordinate. Neither those cluster centroids nor a generic river point proves a castable spot or the right subzone. All four require recorded casting evidence; no waypoint was invented here. |
 | Introduction quests | Questie-Forever-derived fields mark 6608/6609 `breadcrumbFor: 6607`; quest 6607 lists them as breadcrumbs. resolve.js already removes them from blocking prerequisites. The capital detour is removed. Conditional `when onquest` turn-ins preserve a breadcrumb already carried; the separate Nat accept retains blocking skill 225/level 35 goals so eligibility cannot be permanently skipped. |
 
@@ -112,6 +111,9 @@ three failed, while the existing Expert-cap behavior passed. The changed
 generator passes all four. They simulate skill/quest state and waypoint
 arrival, not real casts or server quest offers.
 
+The activity test also checks a later band: after waypoint arrival it shows
+"Fish until skill 125.", retains live progress, and waits until skill 125.
+
 Two additional trainer regressions failed before the registry addition and
 pass afterward: a data-independent resolver test covers both factions and
 rank boundaries; a compiler/Engine test exercises eight combinations (two
@@ -123,13 +125,14 @@ Results:
 
 - **Passed:** `node --test tests/profession.test.js tests/profession-fishing.test.js
   tests/profession-gathering.test.js tests/dsl-smart.test.js
-  tests/engine-smart.test.js`: 66 passed, no failures or skips. This replaces
-  the earlier 43-test run with the expanded profession coverage.
+  tests/engine-smart.test.js tests/nameguard.test.js`: 70 passed, no failures
+  or skips, including the four source naming-policy checks.
 - **Passed:** `profession gathering check`: all six files current.
   Each generated file was compared with HEAD; the other five are unchanged.
-- **Passed:** `lint`: 0 errors, 316 warnings, no Fishing source diagnostics.
-  The baseline had 280 warnings; the increase is stale locale text for the
-  edited guide strings. Translation synchronization is maintainer work.
+- **Passed:** `lint`: 0 errors, 307 warnings, no Fishing source diagnostics.
+  The baseline had 280 warnings; the 27 added warnings are stale locale text
+  for the edited guide strings. Restoring the original Expert instruction
+  removed nine stale translations. Synchronization is maintainer work.
 - **Passed:** `playtest --filter forever/professions/fishing`: 8 plays,
   0 stuck, 0 failed. These cover the eight original races, not Skyborne.
 - **Passed:** `changelog check`: 99 fragments valid; `git diff --check`.
@@ -143,9 +146,14 @@ Results:
 - **Skipped by that suite:** Scrawny Ursera needs the private corrections
   overlay; deck/pier placement needs `data/forever/travel.json`; #246
   needs the Forever entity-list cache. Those inputs were not fabricated.
-- **Not run:** in-game checks, the full repository suite, Forge compilation
+- **Not run locally:** in-game checks, the full repository suite, Forge compilation
   or a Forge port. Supported Node compilation is exercised by gathering
   tests and lint. No compiled addon output was written into the checkout.
+
+CI for commit 8173ba99 passed the full repository tests, translation checks,
+changelog validation, texture generation and previews on a clean runner.
+That runner lacks the local reference data, so data-dependent tests may
+skip; it does not invalidate the separate local-data failure recorded above.
 
 Recommended next slice: collect Forever recordings of the four Artisan
 quest fish, especially Verdantis River/Feralas Ahi, then replace approximate

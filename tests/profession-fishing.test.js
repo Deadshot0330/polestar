@@ -39,27 +39,33 @@ function play(steps, before, script) {
 }
 
 test('Fishing instructions remain on the tracked activity after reaching its waypoint', { skip }, () => {
-	const step = compiled().guide.steps.find((s) => s.goals.some((g) => g.t === 'skill' && g.level === 50));
-	const waypoint = step.goals.find((g) => g.t === 'goto');
-	const frame = compiled().data.eraFrame(waypoint.map);
-	const out = play([step], 'stub.world.level = 10; stub.world.learnSkill(356, "Fishing", 1, 75)', `
-		w.addMap(${waypoint.map}, { name = "Water", c = ${frame.c}, left = ${frame.left}, right = ${frame.right}, top = ${frame.top}, bottom = ${frame.bottom} })
-		w.moveTo(${waypoint.map}, ${waypoint.x}, ${waypoint.y}); flush()
-		local v = E.GetStepView(1).goals[2]
-		local r = { atWater = E.GetStepIndex(), arrived = E.GetStepView(1).goals[1].status, text = v.text, progress = v.progress, manual = v.manual }
-		w.skillUp(356, 49); flush(); r.belowTarget = E.GetStepIndex()
-		w.skillUp(356, 50); flush(); r.atTarget = E.GetStepIndex()
-		emit(r)`);
-	assert.equal(out.atWater, 1);
-	assert.equal(out.arrived, 'done');
-	assert.equal(out.belowTarget, 1);
-	assert.equal(out.atTarget, 2);
-	assert.equal(out.manual, false);
-	assert.deepEqual([out.progress.cur, out.progress.max], [1, 50]);
-	assert.match(out.text, /[Ee]quip/);
-	assert.match(out.text, /Fishing action on an action bar/);
-	assert.match(out.text, /[Cc]ast/);
-	assert.match(out.text, /bobber/);
+	for (const [target, initial, cap] of [[50, 1, 75], [125, 50, 150]]) {
+		const step = compiled().guide.steps.find((s) => s.goals.some((g) => g.t === 'skill' && g.level === target));
+		const waypoint = step.goals.find((g) => g.t === 'goto');
+		const frame = compiled().data.eraFrame(waypoint.map);
+		const out = play([step], `stub.world.level = 10; stub.world.learnSkill(356, "Fishing", ${initial}, ${cap})`, `
+			w.addMap(${waypoint.map}, { name = "Water", c = ${frame.c}, left = ${frame.left}, right = ${frame.right}, top = ${frame.top}, bottom = ${frame.bottom} })
+			w.moveTo(${waypoint.map}, ${waypoint.x}, ${waypoint.y}); flush()
+			local v = E.GetStepView(1).goals[2]
+			local r = { atWater = E.GetStepIndex(), arrived = E.GetStepView(1).goals[1].status, text = v.text, progress = v.progress, manual = v.manual }
+			w.skillUp(356, ${target - 1}); flush(); r.belowTarget = E.GetStepIndex()
+			w.skillUp(356, ${target}); flush(); r.atTarget = E.GetStepIndex()
+			emit(r)`);
+		assert.equal(out.atWater, 1);
+		assert.equal(out.arrived, 'done');
+		assert.equal(out.belowTarget, 1);
+		assert.equal(out.atTarget, 2);
+		assert.equal(out.manual, false);
+		assert.deepEqual([out.progress.cur, out.progress.max], [initial, target]);
+		if (target === 50) {
+			assert.match(out.text, /[Ee]quip/);
+			assert.match(out.text, /Fishing action on an action bar/);
+			assert.match(out.text, /[Cc]ast/);
+			assert.match(out.text, /bobber/);
+		} else {
+			assert.equal(out.text, 'Fish until skill 125.');
+		}
+	}
 });
 
 test('Fishing Artisan goes directly to Nat without requiring either capital breadcrumb', { skip }, () => {

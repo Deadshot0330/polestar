@@ -76,7 +76,7 @@ in-game check:
 - https://www.wow-professions.com/forever/npc/baelann-swiftcurrent
 - https://www.wow-professions.com/forever/npc/fenn-fairweather
 
-No editorial prose or routes were copied. Wowhead's Forever entity pages
+No editorial prose or routes were copied. Public Forever entity pages
 were inaccessible behind a JavaScript challenge during this review.
 
 ## Findings and scope
@@ -142,7 +142,7 @@ Results:
   afterward and its generated match verified.
 - **Skipped by that suite:** Scrawny Ursera needs the private corrections
   overlay; deck/pier placement needs `data/forever/travel.json`; #246
-  needs the Forever Wowhead list cache. Those inputs were not fabricated.
+  needs the Forever entity-list cache. Those inputs were not fabricated.
 - **Not run:** in-game checks, the full repository suite, Forge compilation
   or a Forge port. Supported Node compilation is exercised by gathering
   tests and lint. No compiled addon output was written into the checkout.
